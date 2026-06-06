@@ -49,3 +49,5 @@ Server-only secrets (`POSTHOG_API_KEY` for area-calculation events) are also rea
 ## Image build
 
 CI builds the image via the root `Dockerfile` (multi-stage: Astro + Lens bundle, no secrets required at build time).
+
+Pull requests targeting `main` run a **build-only** check (`Docker Build & Push / build`) so the Docker image is verified before merge. Images are pushed to Docker Hub only when commits land on `main` (or via manual **workflow dispatch**). Manual dispatches do not appear on PR checks — push an empty commit or re-run by syncing the PR branch if you need the check on a PR.
