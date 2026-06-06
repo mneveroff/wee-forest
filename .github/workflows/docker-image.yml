@@ -17,9 +17,10 @@ permissions:
   contents: read
 
 jobs:
-  # PRs: build only — shows as a check on the pull request (no registry push).
+  # PRs: build and push SHA tag only (for pre-merge deploy/testing).
   build:
     if: github.event_name == 'pull_request'
+    environment: production
     runs-on: ubuntu-latest
 
     steps:
@@ -29,7 +30,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Set image tag
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+        run: echo "SHORT_SHA=$(echo '${{ github.event.pull_request.head.sha }}' | cut -c1-7)" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -37,20 +38,26 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build Docker image
+      - name: Log in to Docker registry
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64
-          push: false
-          tags: mneveroff/wee-forest-lens:pr-check
+          push: true
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             GIT_HASH=${{ env.SHORT_SHA }}
 
-  # main + manual: build and push release tags.
+  # main (+ manual dispatch on main): push SHA and latest.
   publish:
     if: github.event_name != 'pull_request'
     environment: production
@@ -75,6 +82,15 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Set publish tags
+        id: meta
+        run: |
+          TAGS="${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${SHORT_SHA}"
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            TAGS="${TAGS},${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:latest"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v7
         with:
@@ -82,9 +98,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
-            ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:latest
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |

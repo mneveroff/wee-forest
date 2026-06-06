@@ -19,16 +19,16 @@ Caddy terminates TLS and reverse-proxies all traffic to the app container.
 
 ## Image tags
 
-CI publishes two tags on every push to `main`:
+CI tagging:
 
-| Tag | Example | Use |
-|-----|---------|-----|
-| Short git SHA | `mneveroff/wee-forest-lens:efe5ba3` | Pin production to a known build |
-| `latest` | `mneveroff/wee-forest-lens:latest` | Track the most recent `main` build |
+| Event | Tags pushed |
+|-------|-------------|
+| Pull request | `mneveroff/wee-forest-lens:<pr-head-sha>` only |
+| Merge to `main` | `<merge-sha>` and `latest` |
 
 `docker-compose.yml` reads `IMAGE_TAG` from `.env` (defaults to `latest` if unset).
 
-Until at least one CI build has completed on `main`, neither tag exists on Docker Hub — set `IMAGE_TAG` to a SHA from a successful workflow run, or wait for CI to push `latest`.
+Use a PR's short SHA to test a branch build before merge. After merge, `latest` tracks `main`; pin with `IMAGE_TAG=<sha>` when you need a specific build.
 
 To deploy a specific build:
 
@@ -50,4 +50,4 @@ Server-only secrets (`POSTHOG_API_KEY` for area-calculation events) are also rea
 
 CI builds the image via the root `Dockerfile` (multi-stage: Astro + Lens bundle, no secrets required at build time).
 
-Pull requests targeting `main` run a **build-only** check (`Docker Build & Push / build`) so the Docker image is verified before merge. Images are pushed to Docker Hub only when commits land on `main` (or via manual **workflow dispatch**). Manual dispatches do not appear on PR checks — push an empty commit or re-run by syncing the PR branch if you need the check on a PR.
+Pull requests targeting `main` build and push `mneveroff/wee-forest-lens:<pr-head-sha>` (`Docker Build & Push / build`) for pre-merge testing. Merges to `main` also update `:latest`. Manual **workflow dispatch** runs the `publish` job (SHA + `latest`) but does not appear on PR checks.
