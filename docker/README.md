@@ -21,10 +21,12 @@ Caddy terminates TLS and reverse-proxies all traffic to the app container.
 
 CI tagging:
 
-| Event | Tags pushed |
-|-------|-------------|
-| Pull request | `mneveroff/wee-forest-lens:<pr-head-sha>` only |
-| Merge to `main` | `<merge-sha>` and `latest` |
+| Event | Tags pushed | Architectures |
+|-------|-------------|---------------|
+| Pull request | `mneveroff/wee-forest-lens:<pr-head-sha>` only | `linux/amd64`, `linux/arm64` |
+| Merge to `main` | `<merge-sha>` and `latest` | `linux/amd64`, `linux/arm64` |
+
+Production host is **arm64** (`sites-emerald`). PR SHA tags published before multi-arch was enabled are amd64-only and will not pull — re-run CI on the PR branch or use a `main` tag after merge.
 
 `docker-compose.yml` reads `IMAGE_TAG` from `.env` (defaults to `latest` if unset).
 
