@@ -29,8 +29,8 @@ LABEL repository="https://github.com/MNeverOff/wee-forest"
 
 WORKDIR /repo
 
-# tileserver-gl-light needs sqlite3 native bindings; npm prebuilds target newer glibc
-# than node:24 (bookworm). Compile inside the image so arm64 runtime matches.
+# tileserver-gl-light needs sqlite3 native bindings. The arm64 sqlite3 prebuild can
+# target newer glibc than node:24 (bookworm), so force a local compile and verify it.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
@@ -44,6 +44,9 @@ ENV npm_config_build_from_source=true
 
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
   pnpm install --filter wee-forest-lens --prod --frozen-lockfile \
+  && rm -rf node_modules/.pnpm/sqlite3@*/node_modules/sqlite3/build \
+  && pnpm rebuild sqlite3 \
+  && pnpm --filter wee-forest-lens exec node -e "require('sqlite3')" \
   && apt-get purge -y python3 make g++ \
   && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/*
