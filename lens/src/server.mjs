@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
 import { spawn } from 'child_process';
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createProxyMiddleware, responseInterceptor } from 'http-proxy-middleware';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dotenv from 'dotenv';
@@ -252,12 +252,53 @@ tileserver.on('close', (code) => {
 
 const tileServerPath = staticServerPath + tileSegment;
 const tileServerPathRewrite = '^/' + tileServerPath;
+const rewriteTileJsonToRelativePaths = process.env.NODE_ENV === 'development';
+
+function toSameOriginTileUrl(tileUrl) {
+    if (typeof tileUrl !== 'string' || tileUrl.startsWith('/')) {
+        return tileUrl;
+    }
+
+    const tileServerMount = '/' + tileServerPath;
+    if (tileServerUrl && tileUrl.startsWith(tileServerUrl)) {
+        return tileServerMount + tileUrl.slice(tileServerUrl.length);
+    }
+
+    try {
+        return decodeURIComponent(new URL(tileUrl).pathname);
+    } catch {
+        return tileUrl;
+    }
+}
 
 const tileserverProxy = createProxyMiddleware({
     target: 'http://localhost:8080',
     pathRewrite: {
         [tileServerPathRewrite]: ''
-    }
+    },
+    selfHandleResponse: rewriteTileJsonToRelativePaths,
+    onProxyRes: rewriteTileJsonToRelativePaths
+        ? responseInterceptor(async (responseBuffer, proxyRes, req, res) => {
+            const contentType = proxyRes.headers['content-type'] || '';
+            if (!contentType.includes('application/json') || !req.url?.endsWith('.json')) {
+                return responseBuffer;
+            }
+
+            try {
+                const payload = JSON.parse(responseBuffer.toString('utf8'));
+                if (Array.isArray(payload.tiles)) {
+                    payload.tiles = payload.tiles.map(toSameOriginTileUrl);
+                }
+
+                const body = JSON.stringify(payload);
+                res.setHeader('content-type', 'application/json; charset=utf-8');
+                res.setHeader('content-length', Buffer.byteLength(body));
+                return body;
+            } catch {
+                return responseBuffer;
+            }
+        })
+        : undefined,
 });
 
 app.use('/' + tileServerPath, limiter, tileserverProxy);

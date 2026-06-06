@@ -17,7 +17,7 @@ pnpm dev:site   # terminal 2
 
 Open `http://127.0.0.1:4321/` and use **Explore the Map** — it should load Lens at `/lens/` via the Astro dev proxy.
 
-Set `TILE_SERVER_HOST=http://localhost:4321` in `lens/.env` so tile URLs work through the Astro proxy.
+Set `TILE_SERVER_HOST=http://127.0.0.1:4321` in `lens/.env` so tileserver-gl metadata URLs match the Astro origin. Avoid opening the site as `http://localhost:4321` or `http://[::1]:4321` unless those hostnames match `TILE_SERVER_HOST` exactly.
 
 Override the Lens upstream with `LENS_DEV_TARGET` if needed (default `http://127.0.0.1:3939`).
 

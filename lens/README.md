@@ -24,7 +24,7 @@ Most of variables are set in the `.env` file. Typical content would be:
 MAPBOX_TOKEN=$YOUR_TOKEN
 RECREATE_DATABASE=
 STATIC_SERVER_PATH=
-TILE_SERVER_HOST=http://localhost:3939
+TILE_SERVER_HOST=http://127.0.0.1:3939
 TILE_SERVER_PATH=tiles
 AREA_SERVER_PATH=area
 TILES_PATH=../data/tiles

@@ -13,7 +13,7 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 - Integrated dev mirrors production routing: run **`pnpm dev:lens`** and **`pnpm dev:site`**, open **`http://127.0.0.1:4321/`** (not Lens port alone for full-path testing).
 - Astro dev **proxies** `/lens*` and `/ingest` to Lens (`:3939`). Lens-only on `:3939` skips Astro quirks but is not the integrated path.
 - Lens requires **`STATIC_SERVER_PATH=lens`** in `lens/.env`.
-- For proxied dev, set **`TILE_SERVER_HOST=http://localhost:4321`** so tileserver-gl metadata URLs match the Astro origin. Direct Lens dev can use `http://localhost:3939`.
+- For proxied dev, set **`TILE_SERVER_HOST=http://127.0.0.1:4321`** so tileserver-gl metadata URLs match the Astro origin. Direct Lens dev can use `http://127.0.0.1:3939`. In development, tile URLs in TileJSON are rewritten to same-origin relative paths so `localhost` vs `[::1]` mismatches do not trigger CORS errors.
 - **`/lens` proxy works only in `astro dev`**, not `astro preview` or static `site/dist/`.
 
 ## Runtime config (secrets)

@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "mkdir -p public/vendor && cp node_modules/plotly.js-dist-min/plotly.min.js public/vendor/plotly.min.js",
     "predev": "pnpm run prebuild",
-    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev --host 127.0.0.1",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
     "astro": "astro"
