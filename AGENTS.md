@@ -45,3 +45,13 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 - Assuming esbuild `define` still inlines env vars — removed; clients read `window.__WEEFOREST_RUNTIME__`.
 - Using `astro preview` to test `/lens` routing — use `astro dev` + running Lens.
 - Putting secrets in Dockerfile build args or CI lens build step — use runtime `.env` on the server.
+
+## Cursor Cloud specific instructions
+
+- **Node 24 required** (`engines` in root `package.json`). The VM default Node may be 22 (`/exec-daemon/node`). Before `pnpm install` or dev commands: `source ~/.nvm/nvm.sh && nvm use 24 && export PATH="$HOME/.nvm/versions/node/$(nvm version)/bin:$PATH"`.
+- **Install**: `pnpm install` from repo root (update script runs this on session start).
+- **First-time config**: copy `lens/README.md` env template into **`lens/.env`** (gitignored). Set `STATIC_SERVER_PATH=lens` and `TILE_SERVER_HOST=http://localhost:4321` for integrated Astro dev.
+- **Dev servers** (two processes, or `pnpm dev`): `pnpm dev:lens` + `pnpm dev:site`. Open **`http://localhost:4321/`** — Astro dev binds to `::1`, so prefer `localhost` over `127.0.0.1` if curl fails.
+- **Data not in git**: `data/tiles/*.mbtiles` and `data/area/*.parquet` must be generated via notebooks (`data/README.md`) or copied from an existing machine. Without them, tileserver-gl exits and area API returns catalog errors; the landing page and Lens HTML still serve.
+- **Build**: `pnpm build` builds Lens + Astro (`site/dist/`). No dedicated lint/test scripts in package.json; CI only runs the Docker multi-arch build.
+- **Secrets**: `MAPBOX_TOKEN` (required for map basemap), `POSTHOG_PUBLIC_API_KEY` and `POSTHOG_API_KEY` (optional analytics) go in `lens/.env` and are exposed to the browser via `/runtime-config.js`.
