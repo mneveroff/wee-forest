@@ -6,6 +6,8 @@
     "node": "24.x"
   },
   "scripts": {
+    "prebuild": "mkdir -p public/vendor && cp node_modules/plotly.js-dist-min/plotly.min.js public/vendor/plotly.min.js",
+    "predev": "pnpm run prebuild",
     "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
     "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
     "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",

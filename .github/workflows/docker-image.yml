@@ -40,6 +40,10 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
+            ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             GIT_HASH=${{ env.SHORT_SHA }}

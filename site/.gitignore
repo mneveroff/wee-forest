@@ -1,5 +1,6 @@
 # build output
 dist/
+public/vendor/
 # generated types
 .astro/
 

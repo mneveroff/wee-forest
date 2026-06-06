@@ -1,5 +1,6 @@
 ---
 const chartId = 'felled-woodland-chart';
+import figure from '../data/plotly-figure.json';
 ---
 
 <figure class="my-8">
@@ -11,15 +12,11 @@ const chartId = 'felled-woodland-chart';
   </figcaption>
 </figure>
 
-<script>
-  import Plotly from 'plotly.js-dist-min';
-  import figure from '../data/plotly-figure.json';
-
-  const chartId = 'felled-woodland-chart';
-
+<script src="/vendor/plotly.min.js" is:inline></script>
+<script is:inline define:vars={{ chartId, figure }}>
   function renderChart() {
     const element = document.getElementById(chartId);
-    if (!element) {
+    if (!element || typeof Plotly === 'undefined') {
       return;
     }
 
@@ -44,7 +41,7 @@ const chartId = 'felled-woodland-chart';
 
   renderChart();
 
-  let resizeTimeout: number | undefined;
+  let resizeTimeout;
   window.addEventListener('resize', () => {
     if (resizeTimeout) {
       window.clearTimeout(resizeTimeout);
@@ -52,7 +49,7 @@ const chartId = 'felled-woodland-chart';
 
     resizeTimeout = window.setTimeout(() => {
       const element = document.getElementById(chartId);
-      if (!element) {
+      if (!element || typeof Plotly === 'undefined') {
         return;
       }
 

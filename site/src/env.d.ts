@@ -10,6 +10,10 @@ interface ImportMeta {
 }
 
 interface Window {
+  Plotly?: {
+    newPlot: (...args: unknown[]) => void;
+    Plots: { resize: (element: HTMLElement) => void };
+  };
   posthog?: {
     capture: (event: string, properties?: Record<string, unknown>) => void;
     init: (token: string, options?: Record<string, unknown>) => void;

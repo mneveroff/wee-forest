@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+
 FROM node:24 AS builder
 
 WORKDIR /repo
@@ -8,7 +10,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY lens/package.json ./lens/
 COPY site/package.json ./site/
 
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+  pnpm install --frozen-lockfile
 
 COPY lens/ ./lens/
 COPY site/ ./site/
@@ -31,7 +34,8 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY lens/package.json ./lens/
 
-RUN pnpm install --filter wee-forest-lens --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+  pnpm install --filter wee-forest-lens --prod --frozen-lockfile
 
 COPY --from=builder /repo/lens/public/ ./lens/public/
 COPY --from=builder /repo/lens/public/dist/ ./lens/public/dist/
