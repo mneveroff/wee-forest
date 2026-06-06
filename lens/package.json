@@ -29,8 +29,8 @@
   "author": "Mike Neverov",
   "license": "MIT",
   "dependencies": {
+    "@duckdb/node-api": "1.5.3-r.2",
     "dotenv": "^16.4.5",
-    "duckdb": "^1.4.4",
     "esbuild": "^0.28.0",
     "events": "^3.3.0",
     "express": "^4.22.0",

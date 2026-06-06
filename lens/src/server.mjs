@@ -1,5 +1,5 @@
 import express from 'express';
-import duckdb from 'duckdb';
+import { DuckDBInstance } from '@duckdb/node-api';
 import path from 'path';
 import fs from 'fs';
 import { promisify } from 'util';
@@ -25,8 +25,14 @@ const readdir = promisify(fs.readdir);
 
 const app = express();
 app.set('trust proxy', 1); // Necessary for caddy / reverse-proxy
-const db = new duckdb.Database(process.env.DUCKDB_PATH);
-const creatorCon = db.connect();
+const db = await DuckDBInstance.create(process.env.DUCKDB_PATH);
+const creatorCon = await db.connect();
+const areaCon = await db.connect();
+
+async function all(con, query) {
+    const reader = await con.runAndReadAll(query);
+    return reader.getRowObjectsJS();
+}
 
 async function loadAll(dataDir, overwrite = false) {
     console.log('Loading Parquet files');
@@ -53,10 +59,10 @@ async function loadParquet(con, filePath, overwrite = false) {
     const tableName = path.basename(filePath, '.parquet');
 
     if (overwrite) {
-        await con.exec(`DROP TABLE IF EXISTS ${tableName}`);
+        await con.run(`DROP TABLE IF EXISTS ${tableName}`);
     }
 
-    await con.exec(`
+    await con.run(`
         CREATE TABLE IF NOT EXISTS ${tableName} AS
         SELECT * FROM parquet_scan('${filePath}')
     `);
@@ -66,42 +72,22 @@ async function createIndexes() {
     console.log('Creating indexes for duckdb. Requests are served un-indexed for now.');
 
     try {
-        const tables = await new Promise((resolve, reject) => {
-            creatorCon.all("SHOW TABLES", (err, result) => {
-                if (err) reject(err);
-                else resolve(result);
-            });
-        });
+        const tables = await all(creatorCon, "SHOW TABLES");
 
         for (const table of tables) {
             console.log(`Creating indexes for table ${table.name}`);
 
-            const columns = await new Promise((resolve, reject) => {
-                creatorCon.all(`PRAGMA table_info(${table.name})`, (err, result) => {
-                    if (err) reject(err);
-                    else resolve(result);
-                });
-            });
+            const columns = await all(creatorCon, `PRAGMA table_info(${table.name})`);
 
             for (const column of columns) {
                 const indexName = `idx_${table.name}_${column.name}`;
-                const indexExists = await new Promise((resolve, reject) => {
-                    creatorCon.all(`SELECT name FROM sqlite_master WHERE type='index' AND name='${indexName}'`, (err, result) => {
-                        if (err) reject(err);
-                        else resolve(result.length > 0);
-                    });
-                });
+                const indexExists = await all(creatorCon, `SELECT name FROM sqlite_master WHERE type='index' AND name='${indexName}'`);
 
-                if (indexExists) {
+                if (indexExists.length > 0) {
                     console.log(`Index ${indexName} already exists, skipping`);
                 } else {
                     console.log(`Creating index for column ${column.name} in table ${table.name}`);
-                    await new Promise((resolve, reject) => {
-                        creatorCon.run(`CREATE INDEX ${indexName} ON ${table.name} (${column.name})`, err => {
-                            if (err) reject(err);
-                            else resolve();
-                        });
-                    });
+                    await creatorCon.run(`CREATE INDEX ${indexName} ON ${table.name} (${column.name})`);
                 }
             }
         }
@@ -115,11 +101,9 @@ async function createIndexes() {
     }
 }
 
-const readonlyCon = db.connect({ read_only: true });
-
 const staticServerPath = process.env.STATIC_SERVER_PATH ? process.env.STATIC_SERVER_PATH + '/' : '';
 const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
-app.get(areaServerPath + '/calculate_areas', limiter, (req, res, next) => {
+app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
     try {
         const { bounds, dataset, type } = req.query;
 
@@ -137,19 +121,13 @@ app.get(areaServerPath + '/calculate_areas', limiter, (req, res, next) => {
             GROUP BY ${type}
         `;
 
-        readonlyCon.all(query, (err, areas) => {
-            if (err) {
-                console.warn(err);
-                return res.status(500).json({ error: 'An error occurred' });
-            }
+        const areas = await all(areaCon, query);
+        const result = areas.reduce((acc, row) => {
+            acc[row[type]] = row.total_area;
+            return acc;
+        }, {});
 
-            const result = areas.reduce((acc, row) => {
-                acc[row[type]] = row.total_area;
-                return acc;
-            }, {});
-
-            res.json(result);
-        });
+        res.json(result);
     } catch (error) {
         console.log(error);
         next(error);
@@ -165,7 +143,7 @@ app.listen(port, '0.0.0.0', () => {
 let recreateDatabase = process.env.RECREATE_DATABASE ? process.env.RECREATE_DATABASE === 'true' : false;
 // Load all Parquet files without awaiting and then create indexes
 loadAll(process.env.PARQUET_PATH, recreateDatabase).catch(console.error)
-.then(() => createIndexes()).then(() => creatorCon.close());
+.then(() => createIndexes()).then(() => creatorCon.disconnectSync());
 
 const tileServerUrl = process.env.TILE_SERVER_HOST + '/' + 
 staticServerPath + (process.env.TILE_SERVER_PATH || '/');

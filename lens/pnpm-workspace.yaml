@@ -4,6 +4,5 @@ overrides:
 minimumReleaseAge: 10080
 
 allowBuilds:
-  duckdb: true
   esbuild: true
   sqlite3: true
