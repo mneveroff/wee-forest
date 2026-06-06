@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:24 AS builder
+FROM node:24-trixie AS builder
 
 WORKDIR /repo
 
@@ -20,7 +20,7 @@ ENV ASTRO_TELEMETRY_DISABLED=1
 RUN pnpm build:site
 RUN pnpm --filter wee-forest-lens exec node build.js
 
-FROM node:24
+FROM node:24-trixie
 
 LABEL maintainer="Mike Neverov <mike@neveroff.dev>"
 LABEL version="1.0"
@@ -29,30 +29,14 @@ LABEL repository="https://github.com/MNeverOff/wee-forest"
 
 WORKDIR /repo
 
-# tileserver-gl-light needs sqlite3 native bindings. The arm64 sqlite3 prebuild can
-# target newer glibc than node:24 (bookworm), so force a local compile and verify it.
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
-
 RUN corepack enable
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY lens/package.json ./lens/
 
-ENV npm_config_build_from_source=true
-
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
   pnpm install --filter wee-forest-lens --prod --frozen-lockfile \
-  && SQLITE_DIR="$(echo node_modules/.pnpm/sqlite3@*/node_modules/sqlite3)" \
-  && rm -rf "$SQLITE_DIR/build" \
-  && cd "$SQLITE_DIR" \
-  && npm run rebuild \
-  && cd /repo \
-  && pnpm --filter wee-forest-lens exec node -e "const { createRequire } = require('node:module'); const tileserverRequire = createRequire(require.resolve('tileserver-gl-light/package.json')); tileserverRequire('@mapbox/mbtiles');" \
-  && apt-get purge -y python3 make g++ \
-  && apt-get autoremove -y \
-  && rm -rf /var/lib/apt/lists/*
+  && pnpm --filter wee-forest-lens exec node -e "const { createRequire } = require('node:module'); const tileserverRequire = createRequire(require.resolve('tileserver-gl-light/package.json')); tileserverRequire('@mapbox/mbtiles');"
 
 COPY --from=builder /repo/lens/public/ ./lens/public/
 COPY --from=builder /repo/lens/public/dist/ ./lens/public/dist/

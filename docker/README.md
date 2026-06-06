@@ -67,7 +67,7 @@ Pull requests push `<pr-head-sha>` only. Merges to `main` push `<sha>` and `:lat
 
 `tileserver-gl` is not listening. Check container logs for `tileserver-gl exited with code 1`.
 
-Common cause on **arm64**: sqlite3 native bindings linked against a newer glibc than the `node:24` image provides (`GLIBC_2.38 not found`). Images built after the Dockerfile compiles sqlite3 from source inside the image should fix this — pull a fresh CI tag and redeploy.
+Common cause on **arm64**: sqlite3 native bindings linked against a newer glibc than Debian Bookworm-based `node:24` provides (`GLIBC_2.38 not found`). The Dockerfile uses `node:24-trixie` and runs a build-time tileserver/sqlite smoke test; pull a fresh CI tag and redeploy.
 
 Verify tileserver is up:
 
