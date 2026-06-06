@@ -1,3 +1,26 @@
 **/*.duckdb
 **/*.mbtiles
 **/*.parquet
+
+# Dependencies and build artifacts (rebuilt inside the image)
+**/node_modules
+**/dist
+**/.astro
+lens/public/dist
+
+# Git and local dev
+.git
+.github
+.cursor
+.worktrees
+**/.env
+**/.env.*
+!docker/.env.example
+!site/.env.example
+
+# Docs and reference assets not needed in the image
+research
+data/area
+data/tiles
+data/source
+data/processed

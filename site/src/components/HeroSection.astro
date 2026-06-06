@@ -1,0 +1,51 @@
+---
+import { siteConfig } from '../config/site';
+---
+
+<section class="overflow-hidden bg-white">
+  <div class="md:grid md:min-h-[32rem] md:grid-cols-2">
+    <div class="relative min-h-72 md:min-h-[32rem]">
+      <img
+        src="/content/images/2024/04/swipe-polygon-5.png"
+        alt=""
+        class="h-full w-full object-cover"
+        width="1200"
+        height="800"
+        loading="eager"
+      />
+    </div>
+    <div
+      class="relative z-10 -mt-20 mx-5 mb-8 flex items-center rounded-lg bg-brand px-6 py-10 shadow-lg md:mx-0 md:mb-0 md:mt-0 md:rounded-none md:px-10 md:py-16 md:shadow-none"
+    >
+      <div class="mx-auto w-full max-w-md text-white">
+        <h2 class="mb-3 text-4xl text-white md:text-5xl">WeeForest Lens</h2>
+        <p class="mb-8 text-lg text-white/95 md:text-xl">
+          Mapping the trees of the United Kingdom.
+        </p>
+        <a
+          href={siteConfig.lensPath}
+          class="btn-primary landing-cta"
+          data-destination={siteConfig.lensPath}
+        >
+          Explore the Map
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function trackCtaClick(event: Event) {
+    const target = event.currentTarget as HTMLAnchorElement | null;
+    const destination = target?.dataset.destination ?? target?.getAttribute('href') ?? '';
+
+    window.posthog?.capture('landing_cta_clicked', {
+      destination,
+      label: target?.textContent?.trim() ?? '',
+    });
+  }
+
+  document.querySelectorAll('.landing-cta').forEach((element) => {
+    element.addEventListener('click', trackCtaClick);
+  });
+</script>

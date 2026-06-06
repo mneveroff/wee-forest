@@ -1,0 +1,35 @@
+---
+import { siteConfig } from '../config/site';
+---
+
+<section class="bg-brand py-12 text-center text-white md:py-16">
+  <div class="content-wrap">
+    <h2 class="mb-3 text-4xl text-white md:text-5xl">See for yourself</h2>
+    <p class="mx-auto mb-8 max-w-2xl text-lg text-white/95 md:text-xl">
+      On an interactive map with timeline, split and swipe modes.
+    </p>
+    <a
+      href={siteConfig.lensPath}
+      class="btn-primary landing-cta"
+      data-destination={siteConfig.lensPath}
+    >
+      Explore the map
+    </a>
+  </div>
+</section>
+
+<script>
+  function trackCtaClick(event: Event) {
+    const target = event.currentTarget as HTMLAnchorElement | null;
+    const destination = target?.dataset.destination ?? target?.getAttribute('href') ?? '';
+
+    window.posthog?.capture('landing_cta_clicked', {
+      destination,
+      label: target?.textContent?.trim() ?? '',
+    });
+  }
+
+  document.querySelectorAll('.landing-cta').forEach((element) => {
+    element.addEventListener('click', trackCtaClick);
+  });
+</script>

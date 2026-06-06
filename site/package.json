@@ -1,0 +1,24 @@
+{
+  "name": "@wee-forest/site",
+  "type": "module",
+  "version": "1.0.0",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "prebuild": "mkdir -p public/vendor && cp node_modules/plotly.js-dist-min/plotly.min.js public/vendor/plotly.min.js",
+    "predev": "pnpm run prebuild",
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.3",
+    "@tailwindcss/vite": "^4.3.0",
+    "astro": "^6.4.4",
+    "plotly.js-dist-min": "^3.5.1",
+    "posthog-js": "^1.376.4",
+    "tailwindcss": "^4.3.0"
+  }
+}

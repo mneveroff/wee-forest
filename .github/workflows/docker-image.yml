@@ -1,79 +1,104 @@
 name: Docker Build & Push
 
 on:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
   workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set image tag
+        run: |
+          FULL_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "SHORT_SHA=${FULL_SHA:0:7}" >> "$GITHUB_ENV"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: false
+          tags: mneveroff/wee-forest-lens:${{ env.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GIT_HASH=${{ env.SHORT_SHA }}
+
+  publish:
+    needs: build
     environment: production
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-    - name: Set up pnpm
-      uses: pnpm/action-setup@v6
-      with:
-        version: 11.5.2
-        run_install: false
+      - name: Set image tag
+        run: |
+          FULL_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          echo "SHORT_SHA=${FULL_SHA:0:7}" >> "$GITHUB_ENV"
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v6
-      with:
-        node-version: 24
-        cache: pnpm
-        cache-dependency-path: lens/pnpm-lock.yaml
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          # build job already caches binfmt; saving again here races on the same GHA key
+          cache-image: false
 
-    - name: Install dependencies
-      run: pnpm install --frozen-lockfile
-      working-directory: lens
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
-    - name: Build Lens assets
-      run: node build.js
-      working-directory: lens
-      env:
-        MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
-        POSTHOG_PUBLIC_API_KEY: ${{ vars.POSTHOG_PUBLIC_API_KEY }}
-        STATIC_SERVER_PATH: ${{ vars.STATIC_SERVER_PATH }}
-        TILE_SERVER_HOST: ${{ vars.TILE_SERVER_HOST }}
-        TILE_SERVER_PATH: ${{ vars.TILE_SERVER_PATH }}
-        AREA_SERVER_PATH: ${{ vars.AREA_SERVER_PATH }}
-        TILES_PATH: ${{ vars.TILES_PATH }}
-        PARQUET_PATH: ${{ vars.PARQUET_PATH }}
-        DUCKDB_PATH: ${{ vars.DUCKDB_PATH }}
-        STATIC_DIR: ${{ vars.STATIC_DIR }}
-        NODE_ENV: ${{ vars.NODE_ENV }}
-        AREA_PORT: ${{ vars.AREA_PORT }}
+      - name: Log in to Docker registry
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Set image tag
-      run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+      - name: Set publish tags
+        id: meta
+        run: |
+          TAGS="${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${SHORT_SHA}"
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            TAGS="${TAGS},${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:latest"
+          fi
+          echo "tags=${TAGS}" >> "$GITHUB_OUTPUT"
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v4
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v4
-
-    - name: Log in to Docker registry
-      uses: docker/login-action@v4
-      with:
-        username: ${{ vars.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        file: ./Dockerfile
-        platforms: linux/amd64,linux/arm64
-        push: true
-        tags: ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
-        build-args: |
-          GIT_HASH=${{ env.SHORT_SHA }}
+      - name: Push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GIT_HASH=${{ env.SHORT_SHA }}

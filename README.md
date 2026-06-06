@@ -22,11 +22,12 @@ This lack of transparency in definition has prompted me to visualise it, which l
 
 ## Structure of this repository
 
-This repository combines three distinct components:
+This repository combines four distinct components:
 
-- Data analysis and processing carried out via Python and Jupyter Notebooks. Data processing, MBTiles generation, area calculation and experiments reside there. Visit the relevant [readme](data/README.md) for details.
-- Lens - folder with the map viewer application, tasked with visualising the data, providing frontend and user interaction. Details of setting it up are documented [within](lens/README.md).
-- Research folder, containing files and references to various pieces of information, methodology, analysis and sources used in the project. Most justifications and observations regarding source data and it's aggregation will be found [there](research/README.md).
+- **Site** — Astro static site for the [weeforest.org](https://weeforest.org/) landing page. See [site/README.md](site/README.md).
+- **Lens** — map viewer application for visualising the data and user interaction. See [lens/README.md](lens/README.md).
+- **Data** — Python and Jupyter notebooks for processing, MBTiles generation, and area calculation. See [data/README.md](data/README.md).
+- **Research** — methodology, analysis, and sources. See [research/README.md](research/README.md).
 
 Separately there's a [docker](docker) folder with a sample docker compose configuration and some other configuration files in the root of the solution.
 
@@ -45,7 +46,9 @@ As this repository doesn't have neither raw nor processed data attached, you wou
 1. Run the [Area Calculation Notebook](data/uk_gb_areas.ipynb) to completion - generating the point datasets for area calculation.
 1. Finally, run the [MBTiles Notebook](data/uk_gb_tiles.ipynb) to generate the .mbtiles files for the map, 23 in total, around 4.5GB total size.
 1. Set up the .env file in the [lens](./lens/) directory, following the instructions in the [lens readme](./lens/README.md).
-1. With everything done, you should be able to run the dev server via `npm run dev`, or production in docker via `npm run docker: build` in lens and `docker-compose up` in docker folders, assuming `.env` files were set up correctly. First few minutes will be spent generating indexes so the area calculation might be unresponsive.
+1. With everything done, install JS packages from the repo root via `pnpm install`.
+1. Run the Lens dev server via `pnpm dev:lens`, the Astro site via `pnpm dev:site`, or both via `pnpm dev`.
+1. For production, deploy the combined multi-arch image published by CI using [docker/docker-compose.yml](docker/docker-compose.yml) plus [docker/Caddyfile.wee-forest](docker/Caddyfile.wee-forest). One container serves `/` (Astro) and `/lens*` (Lens); secrets are supplied via `docker/.env` at runtime. See [docker/README.md](docker/README.md) for image tags and rollout notes.
 
 ## Contributing
 

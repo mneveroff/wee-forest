@@ -1,0 +1,16 @@
+---
+const year = new Date().getFullYear();
+const copyrightYears = year === 2024 ? '2024' : `2024-${year}`;
+---
+
+<footer class="border-t border-neutral-100 bg-white py-8">
+  <div class="content-wrap text-center text-sm text-neutral-500">
+    <p>
+      WeeForest © {copyrightYears}.{' '}
+      <a href="https://mike.neveroff.dev/" class="text-neutral-600">
+        Made by Mike Neverov.
+      </a>
+      {' '}Attribution required.
+    </p>
+  </div>
+</footer>

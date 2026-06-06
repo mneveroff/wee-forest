@@ -1,0 +1,23 @@
+---
+description: Testing principles for this repository
+globs: **/*.{test,spec}.{js,jsx,ts,tsx},**/tests/**/*,**/__tests__/**/*
+alwaysApply: false
+---
+
+# Testing Principles
+
+Adapted from Kent C. Dodds' testing principles:
+<https://github.com/kentcdodds/kentcdodds.com/blob/main/docs/agents/testing-principles.md>
+
+- Prefer small, readable tests with explicit setup and minimal magic.
+- Prefer flat test files with top-level tests; avoid deep `describe` nesting.
+- Avoid shared setup (`beforeEach`/`afterEach`) unless it clearly improves readability.
+- Do not test behaviour already guaranteed by the type system.
+- Build helpers that return ready-to-run objects; avoid global mutable fixtures.
+- Make test names describe user-visible or service-visible behaviour.
+- Prefer behaviour assertions over implementation details. Avoid pinning CSS classes, incidental markup, or exact headers unless they are the contract.
+- Keep tests offline-friendly: use local fixtures/fakes instead of public internet or third-party services.
+- Prefer fast unit tests for server logic; reserve browser/e2e tests for important user journeys.
+- Keep test-only setup in test harnesses/helpers, not production env branches or query parameters.
+- Use disposable resources only when there is real cleanup to perform.
+- When adding e2e coverage, default to happy-path journeys; only keep edge-case e2e tests when lower-level tests cannot credibly cover the behaviour.

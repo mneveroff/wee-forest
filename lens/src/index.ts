@@ -5,6 +5,7 @@ import './assets/map.css'
 import './assets/page.css'
 
 import posthog from 'posthog-js';
+import { getRuntimeConfig, getPostHogApiHost } from './client-config';
 import { WeeForestMap } from './components/map';
 import { WelcomePage, LearnPage, ActPage, SharePage } from './components/page';
 import { DatasetTypes, DatasetDataTypes } from './models/dataset';
@@ -12,13 +13,11 @@ import { BaseMapType } from './components/basemap-selector';
 import { MapModeTypes } from './components/mode-selector';
 
 const defaultCoords = { lat: 54.577, lng: -4.16, zoom: 6.37, pitch: 25 };
-const staticServerPath = process.env.STATIC_SERVER_PATH?.replace(/^\/|\/$/g, '');
-const postHogProxyPath = process.env.POSTHOG_PROXY_PATH || 'ingest';
-const postHogApiHostPath = [staticServerPath, postHogProxyPath].filter(Boolean).join('/');
+const runtimeConfig = getRuntimeConfig();
 
-if (process.env.POSTHOG_PUBLIC_API_KEY) {
-    posthog.init(process.env.POSTHOG_PUBLIC_API_KEY, {
-        api_host: `${window.location.origin}/${postHogApiHostPath}`,
+if (runtimeConfig.posthogPublicApiKey) {
+    posthog.init(runtimeConfig.posthogPublicApiKey, {
+        api_host: getPostHogApiHost(runtimeConfig),
         ui_host: 'https://eu.posthog.com',
     });
 }

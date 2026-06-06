@@ -40,17 +40,17 @@ POSTHOG_HOST=https://eu.i.posthog.com
 POSTHOG_PROXY_PATH=ingest
 ```
 
-With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. `server.mjs` and `build.js` will take care of inserting the environment variables in both bundle and the server. Fields left empty are left so on purpose.
+With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. Fields left empty are left so on purpose.
 
 If you were inclined to serve Lens from a URLPath like it's done on [weeforest.org/lens](https://weeforest.org/lens) you would only have to set the `STATIC_SERVER_PATH` to `lens`.
 
-`MAPBOX_TOKEN` and `POSTHOG_PUBLIC_API_KEY` are build-time values for the browser bundle. Changing them on production requires a new image build. `POSTHOG_API_KEY`, `POSTHOG_HOST` and `POSTHOG_PROXY_PATH` are runtime server values.
+Browser-facing values (`MAPBOX_TOKEN`, `POSTHOG_PUBLIC_API_KEY`, path prefixes) are served at runtime via `/runtime-config.js` from `server.mjs`, so production secrets stay in the container `.env` and are not baked into the Docker image. Server-only values (`POSTHOG_API_KEY`, `POSTHOG_HOST`, data paths) are also read at runtime.
 
 ### Development
 
 1. Check out the repository in a local folder
 1. Complete data preparation, resulting in 23 mbtiles and 23 parquet files, 11 per each year for NFI and NFIxAWI overlay and 1 for AWI only.
-1. Run `npm run dev` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
+1. From the repo root, run `pnpm dev:lens` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
 
 If you're using VSCode you should also find `dev` and `prod` configurations in the `.vscode/launch.json` file, allowing you to attach the debugger to the browser directly.
 
@@ -58,7 +58,7 @@ If you're using VSCode you should also find `dev` and `prod` configurations in t
 
 ### Production
 
-Mirror the steps from the Development section but run `npm run prod` instead. This would disable source mapping and enable minification, as well as serve the files once without watching for changes.
+Mirror the steps from the Development section but run `pnpm --filter wee-forest-lens prod` instead. This would disable source mapping and enable minification, as well as serve the files once without watching for changes.
 
 ## Docker & Compose
 
@@ -66,27 +66,31 @@ For convenience there's also a Dockerfile and Compose files available. If you wo
 
 ### Setup
 
-1. Make sure that you have created the .env file in the [docker directory](../docker/) as described in the Environment File section.
+1. Copy [docker/.env.example](../docker/.env.example) to `docker/.env` and set secrets and paths for production.
 1. If you were to use the `docker-compose.yml` provided, create a new docker network: `docker network create wee_forest_net` and add it to the `.env` file under `DOCKER_MY_NETWORK=wee_forest_net`.
 
 ### Running
 
 Now you're ready to build & run the container:
 
-1. Build the lens image: `cd lens && npm run docker:build`. This will build a container with the app, correct name and tag.
-1. Navigate to compose folder and start it: `cd ../docker && docker-compose up -d`.
+1. Build the combined image from the repo root: `docker build -t wee-forest-lens .` (includes Astro site + Lens).
+1. Navigate to the compose folder and start it: `cd docker && docker compose up -d`.
 
 > Depending on your environment, you might need to configure buildkit/buildx or other Docker settings to build the image correctly, troubleshoot as needed.
 
 ### Deploying
 
-Pushes to `main` run the `Docker Build & Push` GitHub Action. It builds the browser assets with GitHub environment values, then publishes a multi-arch Docker image for `linux/amd64` and `linux/arm64`.
+The `Docker Build & Push` GitHub Action runs a multi-arch build for `linux/amd64` and `linux/arm64`, then publishes from the separate `publish` job. Pull requests publish the PR head short SHA only; merges to `main` publish the merge short SHA and `latest`. Mapbox and PostHog public keys are supplied via `docker/.env` at container runtime through `/runtime-config.js`.
 
-Images are tagged with the short git SHA:
+Images are tagged with the short git SHA, plus `latest` for the most recent `main` build:
 
 ```yaml
 image: mneveroff/wee-forest-lens:<short-sha>
+# or
+image: mneveroff/wee-forest-lens:latest
 ```
+
+Set `IMAGE_TAG` in `docker/.env` — see [docker/README.md](../docker/README.md).
 
 To update production after a successful workflow run:
 
@@ -107,7 +111,7 @@ Barring the registry workflow, you can also archive the image and transfer it to
 
 ### Analytics
 
-Plausible has been removed. Browser analytics now use `posthog-js` through the first-party proxy path configured by `POSTHOG_PROXY_PATH`, which forwards to `POSTHOG_HOST` server-side. The server also uses `posthog-node` to capture backend events such as area calculations.
+Plausible has been removed. Browser analytics on both the landing page and Lens use `posthog-js` through a shared first-party `/ingest` path (configurable via `POSTHOG_PROXY_PATH`), which forwards to `POSTHOG_HOST` server-side. The legacy `/lens/ingest` path is still proxied for compatibility. The server also uses `posthog-node` to capture backend events such as area calculations.
 
 ## Contributing
 

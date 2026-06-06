@@ -1,0 +1,23 @@
+# Caddy reverse proxy for WeeForest and other sites on the same host.
+# Mount your full Caddyfile at /etc/caddy/Caddyfile (see Caddyfile.wee-forest for the WeeForest block).
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+networks:
+  default:
+    name: ${DOCKER_MY_NETWORK}
+    external: true
+
+volumes:
+  caddy_data:
+  caddy_config:

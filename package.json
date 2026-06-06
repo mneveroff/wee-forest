@@ -1,0 +1,20 @@
+{
+  "name": "wee-forest",
+  "private": true,
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": "24.x"
+  },
+  "scripts": {
+    "dev": "concurrently \"pnpm dev:lens\" \"pnpm dev:site\"",
+    "dev:lens": "pnpm --filter wee-forest-lens dev",
+    "dev:site": "pnpm --filter @wee-forest/site dev",
+    "build": "pnpm -r build",
+    "build:lens": "pnpm --filter wee-forest-lens build",
+    "build:site": "pnpm --filter @wee-forest/site build",
+    "docker:build:lens": "pnpm --filter wee-forest-lens docker:build"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

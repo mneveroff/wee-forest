@@ -201,8 +201,12 @@ export class Legend {
             // Add the new fetch requests to the queue
             this._fetchQueue.push(async (): Promise<Array<{ [key: string]: number }>> => {
                 const fetchPromises = boundsAndDataTypes.map(({ bounds, datasetId }) => {
-                    const url = `${this._areaServerPath}/calculate_areas?dataset=${datasetId}&type=${this._datasetDataType.value}&bounds=${bounds.toArray().flat().join(',')}`;
-    
+                    // Trailing slash before query avoids Astro dev treating /lens/area/calculate_areas as a page route.
+                    const url = new URL(`${this._areaServerPath}/calculate_areas/`, window.location.origin);
+                    url.searchParams.set('dataset', datasetId);
+                    url.searchParams.set('type', this._datasetDataType.value);
+                    url.searchParams.set('bounds', bounds.toArray().flat().join(','));
+
                     return fetch(url)
                         .then(response => {
                             if (!response.ok) {

@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Mulish", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Lora", ui-serif, Georgia, serif;
+  --color-brand: #22c55e;
+  --color-brand-dark: #16a34a;
+}
+
+@layer base {
+  html {
+    @apply scroll-smooth antialiased;
+  }
+
+  body {
+    @apply bg-white font-sans text-neutral-800;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-serif font-bold tracking-tight text-neutral-900;
+  }
+
+  h2 {
+    @apply text-3xl leading-tight md:text-4xl;
+  }
+
+  h3 {
+    @apply text-xl md:text-2xl;
+  }
+
+  p {
+    @apply text-lg leading-relaxed text-neutral-700;
+  }
+
+  a {
+    @apply text-brand-dark underline-offset-2 hover:underline;
+  }
+}
+
+@layer components {
+  .content-wrap {
+    @apply mx-auto w-full max-w-3xl px-5 md:px-6;
+  }
+
+  .section-space {
+    @apply py-10 md:py-14;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-base font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-100;
+  }
+
+  .btn-brand {
+    @apply inline-flex items-center justify-center rounded-md bg-brand px-6 py-3 text-base font-semibold text-white transition hover:bg-brand-dark;
+  }
+}

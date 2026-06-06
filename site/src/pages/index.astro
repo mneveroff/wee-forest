@@ -1,0 +1,147 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import HeroSection from '../components/HeroSection.astro';
+import PlotlyChart from '../components/PlotlyChart.astro';
+import DonateButtons from '../components/DonateButtons.astro';
+import CtaBanner from '../components/CtaBanner.astro';
+import { siteConfig } from '../config/site';
+---
+
+<BaseLayout>
+  <HeroSection />
+
+  <article class="section-space">
+    <div class="content-wrap space-y-10">
+      <section class="space-y-6">
+        <h2>
+          The United Kingdom's definition of Woodland includes 600,000 hectares of felled trees
+        </h2>
+        <figure>
+          <img
+            src="/content/images/2024/04/uk-woodland-piechart.png"
+            alt="UK woodland composition pie chart"
+            class="mx-auto w-full max-w-xl"
+            width="1026"
+            height="1026"
+            loading="lazy"
+          />
+          <figcaption class="mt-3 text-center text-sm text-neutral-500">
+            Image credit, clockwise:
+            <a href="https://www.geograph.org.uk/profile/14997">John Lucas</a>,
+            <a href="https://www.geograph.org.uk/profile/7257">Mary and Angus Hogg</a>,
+            Adam Burton / WTML
+          </figcaption>
+        </figure>
+        <p>
+          Out of 3,160,000 hectares that the National Forest Inventory designates as "woodland" only
+          25%, or 750,000 hectares, host what can be considered Native Woods, with the rest being
+          predominately coniferous plantations meant to be harvested - a crop, poisoning the soil
+          and water it's standing on and making it unsuitable for native habitat residents.
+        </p>
+      </section>
+
+      <section class="space-y-6">
+        <h2>Native Trees comprise just 6% of UK's total land area</h2>
+        <p>
+          When combining the Ancient Woodland Inventories and Trees Outside Woods dataset, the Native
+          Trees of the United Kingdom<sup>1</sup> make up just 1,500,000 hectares<sup>2</sup> split
+          almost equally.
+        </p>
+        <p>
+          This figure has also been reduced by at least 70,000 hectares or 4% in the last decade,
+          predominantly due to fellings.
+        </p>
+      </section>
+
+      <section class="space-y-6">
+        <h2>The area of felled woodland has grown 200% over the last decade</h2>
+        <PlotlyChart />
+        <p>
+          During the period between 2012 and 2022 the area of woodland reported by NFI as "Felled" or
+          equivalently empty has grown from 200,000 hectares to 600,000, tripling in just a decade.
+          This includes 70,000 hectares of land present in the Ancient Woodland Inventories.
+        </p>
+        <p>
+          This means that currently there is around 600,000 hectares of land standing without a tree
+          to speak of.
+        </p>
+      </section>
+
+      <section class="space-y-8">
+        <h2>Act</h2>
+
+        <div class="grid gap-8 md:grid-cols-2">
+          <div class="space-y-3">
+            <h3>Spread the word</h3>
+            <p>
+              Simplest one, really. Spread the word about the issue, share your views and educate
+              about the difference between native trees, forestry plantations and trees outside
+              woods. Share this map.
+            </p>
+          </div>
+          <div class="space-y-3">
+            <h3>Volunteer and engage</h3>
+            <p>
+              Whilst professional planting is by far the most efficient way of afforestation, there
+              is immense benefit in engaging locally and meeting new people. Seek out your local
+              projects and events!
+            </p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h3>Support WeeForest Lens</h3>
+          <p>
+            This project is entirely open-source and has been built by one person. With your support
+            I'll be able to cover the hosting fees, continue improving the map, and the resources
+            within, potentially acquiring new ones like the hedge dataset (that's £300 admin fee)
+            and making them available in Lens to the extent that the license allows.
+          </p>
+          <DonateButtons />
+        </div>
+
+        <div class="grid gap-8 md:grid-cols-2">
+          <div class="space-y-3">
+            <h3>Donate to MossyEarth</h3>
+            <p>
+              <a href="https://www.mossy.earth/">Mossy Earth</a> is a spectacular organisation
+              dedicated to rewilding and reforestation projects across the world, with solid ties to
+              the UK. You can buy and even gift membership with them and see your contribution in
+              action.
+            </p>
+          </div>
+          <div class="space-y-3">
+            <h3>Donate to Woodland Trust</h3>
+            <p>
+              <a href="https://www.woodlandtrust.org.uk/">The Woodland Trust</a> is UK's largest
+              woodland conservation charity and they do a lot of good work, so becoming a member
+              would help them fund more of that work and you to be more engaged in their activities.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="space-y-4">
+        <h3>Remarks</h3>
+        <p>
+          Detailed methodology, data sources and attributions can be found in the
+          <a href={siteConfig.githubUrl}>GitHub repository</a>.
+        </p>
+        <ol class="list-decimal space-y-3 pl-5 text-lg text-neutral-700">
+          <li>
+            Trees Data for Northern Ireland not included due to being largely unavailable, total
+            area is UK.
+          </li>
+          <li>
+            National Forest Inventory's Woodland Ecological Condition report claims that Native trees
+            make up 1.5m hectares alone, without the 750k hectares of trees outside woods, but
+            geospatial data for that survey is not available and definitions may be considered flawed
+            with real numbers closer to 1,3m hectares.
+          </li>
+        </ol>
+      </section>
+    </div>
+  </article>
+
+  <CtaBanner />
+</BaseLayout>

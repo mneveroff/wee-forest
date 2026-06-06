@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 
 import rateLimit from 'express-rate-limit';
 import { captureEvent, shutdownPostHog } from './posthog.mjs';
+import { buildRuntimeConfigScript } from './runtime-config.mjs';
 
 // Create a rate limiter
 const limiter = rateLimit({
@@ -112,20 +113,52 @@ async function createIndexes() {
     }
 }
 
-const staticServerPath = process.env.STATIC_SERVER_PATH ? process.env.STATIC_SERVER_PATH + '/' : '';
-const postHogProxyPath = staticServerPath + (process.env.POSTHOG_PROXY_PATH || 'ingest');
-const postHogProxyPathRewrite = '^/' + postHogProxyPath;
-const postHogProxy = createProxyMiddleware({
-    target: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
-    changeOrigin: true,
-    pathRewrite: {
-        [postHogProxyPathRewrite]: ''
-    }
-});
+function normalizeSegment(segment) {
+    return segment?.replace(/^\/|\/$/g, '') || '';
+}
 
-app.use('/' + postHogProxyPath, postHogProxy);
+function servicePath(staticSegment, segment) {
+    return '/' + [staticSegment, segment].filter(Boolean).join('/');
+}
 
-const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
+const staticServerSegment = normalizeSegment(process.env.STATIC_SERVER_PATH);
+const staticServerPath = staticServerSegment ? `${staticServerSegment}/` : '';
+const areaSegment = normalizeSegment(process.env.AREA_SERVER_PATH) || 'area';
+const tileSegment = normalizeSegment(process.env.TILE_SERVER_PATH) || 'tiles';
+const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'ingest';
+const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
+
+function createPostHogProxy(mountPath) {
+    return createProxyMiddleware({
+        target: postHogTarget,
+        changeOrigin: true,
+        pathRewrite: {
+            ['^/' + mountPath]: ''
+        }
+    });
+}
+
+// Shared first-party ingest for Astro (/) and Lens (/lens).
+app.use('/' + postHogIngestPath, createPostHogProxy(postHogIngestPath));
+
+// Legacy path kept for in-flight clients or bookmarks.
+if (staticServerPath) {
+    const legacyIngestPath = staticServerPath + postHogIngestPath;
+    app.use('/' + legacyIngestPath, createPostHogProxy(legacyIngestPath));
+}
+
+function serveRuntimeConfig(_req, res) {
+    res.type('application/javascript');
+    res.set('Cache-Control', 'no-store');
+    res.send(buildRuntimeConfigScript());
+}
+
+app.get('/runtime-config.js', serveRuntimeConfig);
+if (staticServerPath) {
+    app.get('/' + staticServerPath + 'runtime-config.js', serveRuntimeConfig);
+}
+
+const areaServerPath = servicePath(staticServerSegment, areaSegment);
 app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
     try {
         const { bounds, dataset, type } = req.query;
@@ -194,9 +227,16 @@ let recreateDatabase = process.env.RECREATE_DATABASE ? process.env.RECREATE_DATA
 loadAll(process.env.PARQUET_PATH, recreateDatabase).catch(console.error)
 .then(() => createIndexes()).then(() => creatorCon.disconnectSync());
 
-const tileServerUrl = process.env.TILE_SERVER_HOST + '/' + 
-staticServerPath + (process.env.TILE_SERVER_PATH || '/');
-const tileserver = spawn('tileserver-gl', ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
+const tileServerUrl = process.env.TILE_SERVER_HOST
+    ? `${process.env.TILE_SERVER_HOST.replace(/\/$/g, '')}${servicePath(staticServerSegment, tileSegment)}`
+    : '';
+
+function resolveLocalBin(name) {
+    const binPath = path.join(__dirname, '..', 'node_modules', '.bin', name);
+    return fs.existsSync(binPath) ? binPath : name;
+}
+
+const tileserver = spawn(resolveLocalBin('tileserver-gl'), ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
 
 tileserver.stdout.on('data', (data) => {
     console.log(`tileserver-gl: ${data}`);
@@ -210,7 +250,7 @@ tileserver.on('close', (code) => {
     console.log(`tileserver-gl exited with code ${code}`);
 });
 
-const tileServerPath = staticServerPath + (process.env.TILE_SERVER_PATH || '/');
+const tileServerPath = staticServerPath + tileSegment;
 const tileServerPathRewrite = '^/' + tileServerPath;
 
 const tileserverProxy = createProxyMiddleware({
@@ -223,3 +263,11 @@ const tileserverProxy = createProxyMiddleware({
 app.use('/' + tileServerPath, limiter, tileserverProxy);
 
 app.use('/' + staticServerPath, limiter, express.static(path.join(__dirname, process.env.STATIC_DIR || 'public')));
+
+const siteDistPath = process.env.SITE_DIST_PATH || path.join(__dirname, '../../site/dist');
+if (fs.existsSync(siteDistPath)) {
+    app.use(limiter, express.static(siteDistPath, { index: 'index.html', extensions: ['html'] }));
+    console.log(`Serving Astro site from ${siteDistPath}`);
+} else {
+    console.log(`Astro site dist not found at ${siteDistPath}; serving Lens only`);
+}
