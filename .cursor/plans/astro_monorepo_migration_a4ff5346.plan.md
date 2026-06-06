@@ -1,6 +1,6 @@
 ---
 name: Astro Monorepo Migration
-overview: Create a root pnpm workspace for the existing Lens app and a new Astro site, then implement the Ghost handoff's landing page in Astro while preserving production routing for `/lens*`. The approach keeps the current map app operational and replaces only the Ghost-served landing site.
+overview: Create a root pnpm workspace for the existing Lens app and a new Astro site, then implement the Ghost handoff's landing page in Astro while preserving production routing for `/lens*`. The approach keeps the current map app operational, replaces only the Ghost-served landing site, and tracks both surfaces in the same PostHog project.
 todos:
   - id: workspace-root
     content: Create root pnpm workspace files and move current pnpm workspace settings to the repo root.
@@ -17,11 +17,14 @@ todos:
   - id: theme-port
     content: Recreate the landing page in Astro using Tailwind and selected Chapter theme references.
     status: pending
+  - id: posthog-site
+    content: Add Astro PostHog browser analytics using the same project/configuration as Lens where possible.
+    status: pending
   - id: routing-deploy
     content: Document and update deployment routing so Astro serves root paths and `/lens*` remains proxied to Lens.
     status: pending
   - id: verify
-    content: Run workspace builds and verify the landing page, assets, metadata, and Lens proxy behavior.
+    content: Run workspace builds and verify the landing page, analytics, assets, metadata, and Lens proxy behavior.
     status: pending
 isProject: false
 ---
@@ -62,6 +65,15 @@ The key production contract to preserve is in [`source/caddy/wee-forest.Caddyfil
 - Copy needed images from [`source/ghost_wee_forest/ghost-data/content/images`](file:///Users/mneveroff/Downloads/wee-forest-astro-migration-handoff/source/ghost_wee_forest/ghost-data/content/images) into `site/public/content/images`.
 - Recreate the intent of the Chapter Ghost theme from [`themes/chapter`](file:///Users/mneveroff/Downloads/wee-forest-astro-migration-handoff/source/ghost_wee_forest/ghost-data/content/themes/chapter), using Astro components and Tailwind rather than Handlebars. Prioritize the landing page, site shell, navigation, metadata, footer, fonts, and image styling; omit Ghost-only features like memberships/comments/newsletters and unused archive templates.
 
+## PostHog Analytics
+
+- Add PostHog to the Astro landing page using the Astro static-site pattern: a small `PostHog.astro` component included from the base layout with an inline browser initialization script.
+- Use the same PostHog project as Lens by reusing the same public project token currently represented by Lens' `POSTHOG_PUBLIC_API_KEY`. In Astro, expose it as a public env var such as `PUBLIC_POSTHOG_PROJECT_TOKEN` or `PUBLIC_POSTHOG_PUBLIC_API_KEY`, keeping the final naming consistent with Astro conventions.
+- Use the same PostHog host/region as Lens, currently documented as `POSTHOG_HOST=https://eu.i.posthog.com` in [`lens/README.md`](file:///Users/mneveroff/Code/wee-forest/lens/README.md). For the static site this can be either direct `https://eu.i.posthog.com` or a first-party proxy path.
+- Prefer a shared first-party ingest route if deployment allows it, for example `/ingest*` at the domain root, so both `/` and `/lens/` can send browser analytics through the same origin. If that is too much for the first pass, keep Lens' existing `/lens/ingest` proxy and let Astro use the PostHog Cloud host directly, while still using the same project token.
+- Treat cross-stack continuity as possible but not absolute. Because Astro and Lens both run on `weeforest.org` and would use the same PostHog project token, anonymous IDs and sessions should usually connect through PostHog's browser persistence. Avoid depending on that for correctness; add explicit events like `landing_cta_clicked` with destination properties when the landing page sends users to `/lens/`.
+- Keep Lens' existing server-side PostHog setup in [`lens/src/posthog.mjs`](file:///Users/mneveroff/Code/wee-forest/lens/src/posthog.mjs) and backend event capture unchanged unless a shared ingest route requires a small browser-only config adjustment.
+
 ## Routes To Build
 
 - `/` as the only migrated Ghost page, based on Ghost `page.home`.
@@ -79,6 +91,7 @@ The key production contract to preserve is in [`source/caddy/wee-forest.Caddyfil
 
 - Run root workspace install and filtered builds for both packages.
 - Verify the Astro home page renders the migrated content and images.
+- Verify landing page PostHog pageviews and CTA events arrive in the same PostHog project as Lens events.
 - Verify canonical URLs, Open Graph/Twitter metadata, favicon/logo assets, and the generated static output for `/`.
 - Verify `/lens/` still reaches the existing Lens app and is not shadowed by Astro.
 - Produce a short migration note listing intentionally omitted Ghost routes/features and any theme behaviors that were simplified.
