@@ -1,6 +1,8 @@
 overrides:
   sqlite3: ^6.0.1
 
+minimumReleaseAge: 10080
+
 allowBuilds:
   duckdb: true
   esbuild: true
