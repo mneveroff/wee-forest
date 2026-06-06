@@ -40,6 +40,8 @@
     "lit-html": "^3.1.2",
     "mapbox-gl": "^3.2.0",
     "mapbox-gl-compare": "^0.4.1",
+    "posthog-js": "^1.376.4",
+    "posthog-node": "^5.35.6",
     "tileserver-gl-light": "^5.6.0"
   },
   "packageManager": "pnpm@11.5.2",

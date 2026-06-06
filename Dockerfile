@@ -12,6 +12,7 @@ WORKDIR /app
 COPY lens/public/ /app/public/
 COPY lens/public/dist/ /app/public/dist/
 COPY lens/src/server.mjs /app/
+COPY lens/src/posthog.mjs /app/
 COPY lens/tileserver-config.prod.json /app/tileserver-config.json
 
 # Creating the data directories and assigning permissions

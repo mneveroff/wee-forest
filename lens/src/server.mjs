@@ -10,6 +10,7 @@ import { dirname } from 'path';
 import dotenv from 'dotenv';
 
 import rateLimit from 'express-rate-limit';
+import { captureEvent, shutdownPostHog } from './posthog.mjs';
 
 // Create a rate limiter
 const limiter = rateLimit({
@@ -68,6 +69,16 @@ async function loadParquet(con, filePath, overwrite = false) {
     `);
 }
 
+function getPostHogDistinctId(req) {
+    const distinctId = req.get('x-posthog-distinct-id');
+
+    if (distinctId) {
+        return distinctId;
+    }
+
+    return req.ip || 'anonymous';
+}
+
 async function createIndexes() {
     console.log('Creating indexes for duckdb. Requests are served un-indexed for now.');
 
@@ -102,6 +113,18 @@ async function createIndexes() {
 }
 
 const staticServerPath = process.env.STATIC_SERVER_PATH ? process.env.STATIC_SERVER_PATH + '/' : '';
+const postHogProxyPath = staticServerPath + (process.env.POSTHOG_PROXY_PATH || 'ingest');
+const postHogProxyPathRewrite = '^/' + postHogProxyPath;
+const postHogProxy = createProxyMiddleware({
+    target: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
+    changeOrigin: true,
+    pathRewrite: {
+        [postHogProxyPathRewrite]: ''
+    }
+});
+
+app.use('/' + postHogProxyPath, postHogProxy);
+
 const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
 app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
     try {
@@ -127,11 +150,37 @@ app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => 
             return acc;
         }, {});
 
+        captureEvent({
+            distinctId: getPostHogDistinctId(req),
+            event: 'area calculated',
+            properties: {
+                dataset,
+                type,
+                bounds,
+                result_count: Object.keys(result).length,
+                $current_url: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+            },
+        });
+
         res.json(result);
     } catch (error) {
         console.log(error);
         next(error);
     }
+});
+
+async function shutdown(signal) {
+    console.log(`Received ${signal}, flushing PostHog events`);
+    await shutdownPostHog();
+    process.exit(0);
+}
+
+process.once('SIGINT', () => {
+    void shutdown('SIGINT');
+});
+
+process.once('SIGTERM', () => {
+    void shutdown('SIGTERM');
 });
 
 const port = process.env.AREA_PORT || 3939;
