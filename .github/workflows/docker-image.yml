@@ -34,9 +34,9 @@ jobs:
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
       working-directory: lens
-  
-    - name: Build Docker image
-      run: pnpm run docker:build
+
+    - name: Build Lens assets
+      run: node build.js
       working-directory: lens
       env:
         MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
@@ -52,14 +52,28 @@ jobs:
         NODE_ENV: ${{ vars.NODE_ENV }}
         AREA_PORT: ${{ vars.AREA_PORT }}
 
+    - name: Set image tag
+      run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Log in to Docker registry
       uses: docker/login-action@v3
       with:
         username: ${{ vars.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Tag Docker image
-      run: docker tag wee-forest-lens ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:$(git rev-parse --short HEAD)
-
-    - name: Push Docker image
-      run: docker push ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:$(git rev-parse --short HEAD)
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:${{ env.SHORT_SHA }}
+        build-args: |
+          GIT_HASH=${{ env.SHORT_SHA }}
