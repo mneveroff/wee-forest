@@ -11,6 +11,7 @@ import dotenv from 'dotenv';
 
 import rateLimit from 'express-rate-limit';
 import { captureEvent, shutdownPostHog } from './posthog.mjs';
+import { buildRuntimeConfigScript } from './runtime-config.mjs';
 
 // Create a rate limiter
 const limiter = rateLimit({
@@ -125,6 +126,12 @@ const postHogProxy = createProxyMiddleware({
 
 app.use('/' + postHogProxyPath, postHogProxy);
 
+app.get('/runtime-config.js', (_req, res) => {
+    res.type('application/javascript');
+    res.set('Cache-Control', 'no-store');
+    res.send(buildRuntimeConfigScript());
+});
+
 const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
 app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
     try {
@@ -223,3 +230,11 @@ const tileserverProxy = createProxyMiddleware({
 app.use('/' + tileServerPath, limiter, tileserverProxy);
 
 app.use('/' + staticServerPath, limiter, express.static(path.join(__dirname, process.env.STATIC_DIR || 'public')));
+
+const siteDistPath = process.env.SITE_DIST_PATH || path.join(__dirname, '../../site/dist');
+if (fs.existsSync(siteDistPath)) {
+    app.use(limiter, express.static(siteDistPath, { index: 'index.html', extensions: ['html'] }));
+    console.log(`Serving Astro site from ${siteDistPath}`);
+} else {
+    console.log(`Astro site dist not found at ${siteDistPath}; serving Lens only`);
+}

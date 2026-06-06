@@ -1,35 +1,53 @@
+FROM node:24 AS builder
+
+WORKDIR /repo
+
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY lens/package.json ./lens/
+COPY site/package.json ./site/
+
+RUN pnpm install --frozen-lockfile
+
+COPY lens/ ./lens/
+COPY site/ ./site/
+
+RUN pnpm build:site
+RUN pnpm --filter wee-forest-lens exec node build.js
+
 FROM node:24
 
-# Metadata
 LABEL maintainer="Mike Neverov <mike@neveroff.dev>"
 LABEL version="1.0"
-LABEL description="Mapping trees of the United Kingdom"
-LABEL repository="https://github.com/MNeverOff/wee-forest-lens"
+LABEL description="WeeForest site and Lens map application"
+LABEL repository="https://github.com/MNeverOff/wee-forest"
 
-WORKDIR /app
+WORKDIR /repo
 
-# Copying the core files
-COPY lens/public/ /app/public/
-COPY lens/public/dist/ /app/public/dist/
-COPY lens/src/server.mjs /app/
-COPY lens/src/posthog.mjs /app/
-COPY lens/tileserver-config.prod.json /app/tileserver-config.json
+RUN corepack enable
 
-# Creating the data directories and assigning permissions
-RUN mkdir -p /app/data && chmod -R a+w /app/data
-RUN mkdir -p /app/data/area && chmod -R a+w /app/data/area
-RUN mkdir -p /app/data/tiles && chmod -R a+w /app/data/tiles
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY lens/package.json ./lens/
 
-# Install dependencies
-COPY lens/package.json /app/
-RUN npm install --production
+RUN pnpm install --filter wee-forest-lens --prod --frozen-lockfile
 
-# Doesn't work yet
+COPY --from=builder /repo/lens/public/ ./lens/public/
+COPY --from=builder /repo/lens/public/dist/ ./lens/public/dist/
+COPY --from=builder /repo/site/dist/ ./site/dist/
+COPY lens/src/server.mjs ./lens/src/
+COPY lens/src/posthog.mjs ./lens/src/
+COPY lens/src/runtime-config.mjs ./lens/src/
+COPY lens/tileserver-config.prod.json ./lens/tileserver-config.json
+
+WORKDIR /repo/lens
+
+RUN mkdir -p /repo/lens/data/area /repo/lens/data/tiles && chmod -R a+w /repo/lens/data
+
 ARG GIT_HASH
 ENV GIT_HASH=${GIT_HASH:-dev}
+ENV SITE_DIST_PATH=/repo/site/dist
 
-# Configure exposed port
 EXPOSE 3939
 
-# Run start.sh when the container launches
-CMD ["npm", "run", "docker:serve"]
+CMD ["node", "src/server.mjs"]

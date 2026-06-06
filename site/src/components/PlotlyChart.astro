@@ -1,0 +1,62 @@
+---
+const chartId = 'felled-woodland-chart';
+---
+
+<figure class="my-8">
+  <div id={chartId} class="plotly-graph-div h-[22rem] w-full md:h-[28rem]"></div>
+  <figcaption class="mt-3 text-sm leading-relaxed text-neutral-500">
+    Forestry Commission, Natural England, NatureScot, Scottish Forestry, Natural Resources Wales.
+    Contains Ordnance Survey Data. © Crown copyright and database right 2006-2022. Built with
+    <a href="https://plotly.com/python/" rel="nofollow" target="_blank">Plotly</a>.
+  </figcaption>
+</figure>
+
+<script>
+  import Plotly from 'plotly.js-dist-min';
+  import figure from '../data/plotly-figure.json';
+
+  const chartId = 'felled-woodland-chart';
+
+  function renderChart() {
+    const element = document.getElementById(chartId);
+    if (!element) {
+      return;
+    }
+
+    const layout = {
+      ...figure.layout,
+      autosize: true,
+      margin: { l: 40, r: 40, t: 40, b: 40 },
+    };
+
+    Plotly.newPlot(
+      element,
+      figure.data,
+      layout,
+      {
+        responsive: true,
+        displayModeBar: false,
+        showLink: false,
+      },
+      figure.frames,
+    );
+  }
+
+  renderChart();
+
+  let resizeTimeout: number | undefined;
+  window.addEventListener('resize', () => {
+    if (resizeTimeout) {
+      window.clearTimeout(resizeTimeout);
+    }
+
+    resizeTimeout = window.setTimeout(() => {
+      const element = document.getElementById(chartId);
+      if (!element) {
+        return;
+      }
+
+      Plotly.Plots.resize(element);
+    }, 100);
+  });
+</script>

@@ -8,6 +8,7 @@ import { BaseMapSelector, BaseMapType, BaseMaps } from './basemap-selector';
 import { ModeSelector, MapModeTypes, MapModes } from './mode-selector';
 import { DatasetSelector } from './dataset-selector';
 import { DatasetTypes, DatasetDataTypes, DatasetConfigs, DatasetConfig, DatasetDataType, FeatureSetting } from '../models/dataset';
+import { getRuntimeConfig } from '../client-config';
 
 // Default for the UK&I to be visible in the middle
 const defaultBounds = [ -12, 48, 7, 61 ];
@@ -146,10 +147,10 @@ export class WeeForestMap {
     private _rightWidgetContainer: HTMLElement;
     private _leftWidgetContainer: HTMLElement;
 
-    // Config 
-    private _accessToken: string = process.env.MAPBOX_TOKEN!;
-    private _tileServerPath: string = process.env.TILE_SERVER_PATH!;
-    private _areaServerPath: string = process.env.AREA_SERVER_PATH!;
+    // Config
+    private _accessToken: string;
+    private _tileServerPath: string;
+    private _areaServerPath: string;
     private _bounds = defaultBounds;
 
     // State
@@ -175,6 +176,11 @@ export class WeeForestMap {
     constructor(
         containerId: string, 
         coordinates: { lat: number, lng: number, zoom: number, pitch: number}, selectedMode: MapModeTypes, selectedDataset: DatasetTypes, selectedBasemap: BaseMapType, selectedDatasetDataType?: DatasetDataTypes, datasetYear?: number, compareDatasetYear?: number) {
+
+        const config = getRuntimeConfig();
+        this._accessToken = config.mapboxToken ?? '';
+        this._tileServerPath = config.tileServerPath ?? 'tiles';
+        this._areaServerPath = config.areaServerPath ?? 'area';
 
         // Setting state on load
         mapboxgl.accessToken = this._accessToken;

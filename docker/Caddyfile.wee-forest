@@ -1,0 +1,23 @@
+# WeeForest block for Caddy.
+# Merge into your main Caddyfile or copy alongside caddy-compose.yml.
+#
+# The single wee-forest-lens image serves:
+#   /        → Astro static site
+#   /lens*   → Lens app (map, tiles, area API, PostHog proxy)
+#
+# Reload after edits:
+#   docker exec -w /etc/caddy caddy caddy reload
+
+(tls_config_wee_forest) {
+	tls certs@neveroff.dev
+}
+
+www.{$DOMAIN_WEE_FOREST} {
+	import tls_config_wee_forest
+	redir https://{$DOMAIN_WEE_FOREST}{uri}
+}
+
+{$DOMAIN_WEE_FOREST} {
+	import tls_config_wee_forest
+	reverse_proxy wee_forest_lens:3939
+}

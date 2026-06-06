@@ -40,17 +40,17 @@ POSTHOG_HOST=https://eu.i.posthog.com
 POSTHOG_PROXY_PATH=ingest
 ```
 
-With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. `server.mjs` and `build.js` will take care of inserting the environment variables in both bundle and the server. Fields left empty are left so on purpose.
+With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. Fields left empty are left so on purpose.
 
 If you were inclined to serve Lens from a URLPath like it's done on [weeforest.org/lens](https://weeforest.org/lens) you would only have to set the `STATIC_SERVER_PATH` to `lens`.
 
-`MAPBOX_TOKEN` and `POSTHOG_PUBLIC_API_KEY` are build-time values for the browser bundle. Changing them on production requires a new image build. `POSTHOG_API_KEY`, `POSTHOG_HOST` and `POSTHOG_PROXY_PATH` are runtime server values.
+Browser-facing values (`MAPBOX_TOKEN`, `POSTHOG_PUBLIC_API_KEY`, path prefixes) are served at runtime via `/runtime-config.js` from `server.mjs`, so production secrets stay in the container `.env` and are not baked into the Docker image. Server-only values (`POSTHOG_API_KEY`, `POSTHOG_HOST`, data paths) are also read at runtime.
 
 ### Development
 
 1. Check out the repository in a local folder
 1. Complete data preparation, resulting in 23 mbtiles and 23 parquet files, 11 per each year for NFI and NFIxAWI overlay and 1 for AWI only.
-1. Run `npm run dev` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
+1. From the repo root, run `pnpm dev:lens` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
 
 If you're using VSCode you should also find `dev` and `prod` configurations in the `.vscode/launch.json` file, allowing you to attach the debugger to the browser directly.
 
@@ -58,7 +58,7 @@ If you're using VSCode you should also find `dev` and `prod` configurations in t
 
 ### Production
 
-Mirror the steps from the Development section but run `npm run prod` instead. This would disable source mapping and enable minification, as well as serve the files once without watching for changes.
+Mirror the steps from the Development section but run `pnpm --filter wee-forest-lens prod` instead. This would disable source mapping and enable minification, as well as serve the files once without watching for changes.
 
 ## Docker & Compose
 
@@ -73,8 +73,8 @@ For convenience there's also a Dockerfile and Compose files available. If you wo
 
 Now you're ready to build & run the container:
 
-1. Build the lens image: `cd lens && npm run docker:build`. This will build a container with the app, correct name and tag.
-1. Navigate to compose folder and start it: `cd ../docker && docker-compose up -d`.
+1. Build the combined image from the repo root: `docker build -t wee-forest-lens .` (includes Astro site + Lens).
+1. Navigate to the compose folder and start it: `cd docker && docker compose up -d`.
 
 > Depending on your environment, you might need to configure buildkit/buildx or other Docker settings to build the image correctly, troubleshoot as needed.
 
