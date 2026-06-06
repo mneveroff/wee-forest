@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+const env = (key) => JSON.stringify(process.env[key] || '');
+
 async function run() {
   let ctx = await esbuild.context({
     entryPoints: ['./src/index.ts'],
@@ -12,12 +14,12 @@ async function run() {
     outdir: './public/dist',
     logLevel: 'info',
     define: {
-      'process.env.MAPBOX_TOKEN': JSON.stringify(process.env.MAPBOX_TOKEN),
-      'process.env.STATIC_SERVER_PATH': JSON.stringify(process.env.STATIC_SERVER_PATH),
-      'process.env.AREA_SERVER_PATH': JSON.stringify(process.env.AREA_SERVER_PATH),
-      'process.env.TILE_SERVER_PATH': JSON.stringify(process.env.TILE_SERVER_PATH),
-      'process.env.POSTHOG_PUBLIC_API_KEY': JSON.stringify(process.env.POSTHOG_PUBLIC_API_KEY),
-      'process.env.POSTHOG_PROXY_PATH': JSON.stringify(process.env.POSTHOG_PROXY_PATH)
+      'process.env.MAPBOX_TOKEN': env('MAPBOX_TOKEN'),
+      'process.env.STATIC_SERVER_PATH': env('STATIC_SERVER_PATH'),
+      'process.env.AREA_SERVER_PATH': env('AREA_SERVER_PATH'),
+      'process.env.TILE_SERVER_PATH': env('TILE_SERVER_PATH'),
+      'process.env.POSTHOG_PUBLIC_API_KEY': env('POSTHOG_PUBLIC_API_KEY'),
+      'process.env.POSTHOG_PROXY_PATH': env('POSTHOG_PROXY_PATH')
     },
     loader: {
       ".png": "file",

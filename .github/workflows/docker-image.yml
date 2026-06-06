@@ -1,11 +1,9 @@
 name: Docker Build & Push
 
-#on:
-#  push:
-#    branches:
-#      - main
-
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -18,22 +16,31 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 11.5.2
+        run_install: false
 
     - name: Set up Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: 20
+        cache: pnpm
+        cache-dependency-path: lens/pnpm-lock.yaml
 
     - name: Install dependencies
-      run: npm ci
+      run: pnpm install --frozen-lockfile
       working-directory: lens
   
     - name: Build Docker image
-      run: npm run docker:build
+      run: pnpm run docker:build
       working-directory: lens
       env:
         MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+        POSTHOG_PUBLIC_API_KEY: ${{ vars.POSTHOG_PUBLIC_API_KEY }}
         STATIC_SERVER_PATH: ${{ vars.STATIC_SERVER_PATH }}
         TILE_SERVER_HOST: ${{ vars.TILE_SERVER_HOST }}
         TILE_SERVER_PATH: ${{ vars.TILE_SERVER_PATH }}
@@ -50,6 +57,9 @@ jobs:
       with:
         username: ${{ vars.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Tag Docker image
+      run: docker tag wee-forest-lens ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:$(git rev-parse --short HEAD)
 
     - name: Push Docker image
       run: docker push ${{ vars.DOCKERHUB_USERNAME }}/wee-forest-lens:$(git rev-parse --short HEAD)
