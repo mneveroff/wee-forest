@@ -5,14 +5,14 @@
   "main": "public/index.html",
   "type": "module",
   "scripts": {
-    "start-tileserver": "tileserver-gl-light -c tileserver-config.json",
-    "watch-dev": "npm install && node build.dev.js",
+    "start-tileserver": "tileserver-gl -c tileserver-config.json",
+    "watch-dev": "pnpm install && node build.dev.js",
     "serve-dev": "nodemon src/server.mjs",
-    "dev": "concurrently \"npm run watch-dev\" \"npm run serve-dev\"",
-    "build": "npm install && node build.js",
+    "dev": "concurrently \"pnpm run watch-dev\" \"pnpm run serve-dev\"",
+    "build": "pnpm install && node build.js",
     "serve": "node src/server.mjs",
-    "prod": "npm run build && npm run serve",
-    "docker:build": "npm run build && docker build --build-arg GIT_HASH=$(git rev-parse --short HEAD) -t wee-forest-lens --no-cache ../",
+    "prod": "pnpm run build && pnpm run serve",
+    "docker:build": "pnpm run build && docker build --build-arg GIT_HASH=$(git rev-parse --short HEAD) -t wee-forest-lens --no-cache ../",
     "docker:serve": "node server.mjs"
   },
   "repository": {
@@ -30,7 +30,8 @@
   "license": "MIT",
   "dependencies": {
     "dotenv": "^16.4.5",
-    "duckdb": "^0.10.1",
+    "duckdb": "^1.4.4",
+    "esbuild": "^0.28.0",
     "events": "^3.3.0",
     "express": "^4.20.0",
     "express-rate-limit": "^7.2.0",
@@ -39,14 +40,13 @@
     "lit-html": "^3.1.2",
     "mapbox-gl": "^3.2.0",
     "mapbox-gl-compare": "^0.4.1",
-    "tileserver-gl-light": "^4.13.3",
-    "esbuild": "^0.20.2"
+    "tileserver-gl-light": "^5.6.0"
   },
+  "packageManager": "pnpm@11.5.2",
   "engines": {
-    "node": "20.x"
+    "node": "24.x"
   },
   "devDependencies": {
-    "@types/mapbox-gl": "^3.1.0",
     "concurrently": "^8.2.2",
     "nodemon": "^3.1.0"
   }

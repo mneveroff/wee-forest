@@ -1,0 +1,7 @@
+overrides:
+  sqlite3: ^6.0.1
+
+allowBuilds:
+  duckdb: true
+  esbuild: true
+  sqlite3: true

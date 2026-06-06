@@ -169,18 +169,18 @@ loadAll(process.env.PARQUET_PATH, recreateDatabase).catch(console.error)
 
 const tileServerUrl = process.env.TILE_SERVER_HOST + '/' + 
 staticServerPath + (process.env.TILE_SERVER_PATH || '/');
-const tileserver = spawn('tileserver-gl-light', ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
+const tileserver = spawn('tileserver-gl', ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
 
 tileserver.stdout.on('data', (data) => {
-    console.log(`tileserver-gl-light: ${data}`);
+    console.log(`tileserver-gl: ${data}`);
 });
 
 tileserver.stderr.on('data', (data) => {
-    console.error(`tileserver-gl-light: ${data}`);
+    console.error(`tileserver-gl: ${data}`);
 });
 
 tileserver.on('close', (code) => {
-    console.log(`tileserver-gl-light exited with code ${code}`);
+    console.log(`tileserver-gl exited with code ${code}`);
 });
 
 const tileServerPath = staticServerPath + (process.env.TILE_SERVER_PATH || '/');
