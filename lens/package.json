@@ -33,9 +33,9 @@
     "duckdb": "^1.4.4",
     "esbuild": "^0.28.0",
     "events": "^3.3.0",
-    "express": "^4.20.0",
+    "express": "^4.22.0",
     "express-rate-limit": "^7.2.0",
-    "http-proxy-middleware": "^2.0.6",
+    "http-proxy-middleware": "^2.0.9",
     "lit": "^3.1.2",
     "lit-html": "^3.1.2",
     "mapbox-gl": "^3.2.0",
@@ -47,7 +47,7 @@
     "node": "24.x"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "nodemon": "^3.1.0"
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
   }
 }

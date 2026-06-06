@@ -8,6 +8,9 @@ name: Docker Build & Push
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     environment: production
