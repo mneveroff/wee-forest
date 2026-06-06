@@ -126,11 +126,16 @@ const postHogProxy = createProxyMiddleware({
 
 app.use('/' + postHogProxyPath, postHogProxy);
 
-app.get('/runtime-config.js', (_req, res) => {
+function serveRuntimeConfig(_req, res) {
     res.type('application/javascript');
     res.set('Cache-Control', 'no-store');
     res.send(buildRuntimeConfigScript());
-});
+}
+
+app.get('/runtime-config.js', serveRuntimeConfig);
+if (staticServerPath) {
+    app.get('/' + staticServerPath + 'runtime-config.js', serveRuntimeConfig);
+}
 
 const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
 app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
