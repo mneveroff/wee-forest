@@ -60,3 +60,17 @@ CI runs two jobs on every trigger:
 | `publish` | Rebuild from cache and push tags (needs `production` env) |
 
 Pull requests push `<pr-head-sha>` only. Merges to `main` push `<sha>` and `:latest`. Manual **workflow dispatch** from `main` matches a merge; from other branches it pushes SHA only.
+
+## Troubleshooting
+
+### `/lens/tiles/...` returns 504 and logs show `ECONNREFUSED` to `localhost:8080`
+
+`tileserver-gl` is not listening. Check container logs for `tileserver-gl exited with code 1`.
+
+Common cause on **arm64**: sqlite3 native bindings linked against a newer glibc than the `node:24` image provides (`GLIBC_2.38 not found`). Images built after the Dockerfile compiles sqlite3 from source inside the image should fix this — pull a fresh CI tag and redeploy.
+
+Verify tileserver is up:
+
+```bash
+docker compose logs wee_forest_lens 2>&1 | grep -E 'tileserver-gl|ECONNREFUSED'
+```
