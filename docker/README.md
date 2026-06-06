@@ -3,7 +3,8 @@
 Production runs as a **single Docker image** (`wee-forest-lens`) that serves:
 
 - `/` — Astro static site (`site/dist`)
-- `/lens*` — Lens map app, tile proxy, area API, PostHog ingest proxy
+- `/lens*` — Lens map app, tile proxy, area API
+- `/ingest*` — PostHog first-party proxy (shared by site and Lens)
 
 Caddy terminates TLS and reverse-proxies all traffic to the app container.
 

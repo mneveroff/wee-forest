@@ -114,17 +114,27 @@ async function createIndexes() {
 }
 
 const staticServerPath = process.env.STATIC_SERVER_PATH ? process.env.STATIC_SERVER_PATH + '/' : '';
-const postHogProxyPath = staticServerPath + (process.env.POSTHOG_PROXY_PATH || 'ingest');
-const postHogProxyPathRewrite = '^/' + postHogProxyPath;
-const postHogProxy = createProxyMiddleware({
-    target: process.env.POSTHOG_HOST || 'https://eu.i.posthog.com',
-    changeOrigin: true,
-    pathRewrite: {
-        [postHogProxyPathRewrite]: ''
-    }
-});
+const postHogIngestPath = process.env.POSTHOG_PROXY_PATH || 'ingest';
+const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
 
-app.use('/' + postHogProxyPath, postHogProxy);
+function createPostHogProxy(mountPath) {
+    return createProxyMiddleware({
+        target: postHogTarget,
+        changeOrigin: true,
+        pathRewrite: {
+            ['^/' + mountPath]: ''
+        }
+    });
+}
+
+// Shared first-party ingest for Astro (/) and Lens (/lens).
+app.use('/' + postHogIngestPath, createPostHogProxy(postHogIngestPath));
+
+// Legacy path kept for in-flight clients or bookmarks.
+if (staticServerPath) {
+    const legacyIngestPath = staticServerPath + postHogIngestPath;
+    app.use('/' + legacyIngestPath, createPostHogProxy(legacyIngestPath));
+}
 
 function serveRuntimeConfig(_req, res) {
     res.type('application/javascript');

@@ -1,10 +1,9 @@
 ---
 const devToken = import.meta.env.PUBLIC_POSTHOG_PUBLIC_API_KEY;
-const devHost = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com';
 ---
 
 <script is:inline src="/runtime-config.js"></script>
-<script is:inline define:vars={{ devToken, devHost }}>
+<script is:inline define:vars={{ devToken }}>
   !(function (t, e) {
     var o, n, p, r;
     e.__SV ||
@@ -51,11 +50,11 @@ const devHost = import.meta.env.PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com
   function initPostHog() {
     const cfg = window.__WEEFOREST_RUNTIME__ || {};
     const token = cfg.posthogPublicApiKey || devToken;
-    const host = cfg.posthogHost || devHost;
     if (!token) return;
 
+    const ingestPath = cfg.posthogProxyPath || 'ingest';
     posthog.init(token, {
-      api_host: host,
+      api_host: `${window.location.origin}/${ingestPath}`,
       ui_host: 'https://eu.posthog.com',
       person_profiles: 'identified_only',
     });

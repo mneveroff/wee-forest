@@ -17,3 +17,8 @@ declare global {
 export function getRuntimeConfig(): WeeForestRuntimeConfig {
     return window.__WEEFOREST_RUNTIME__ ?? {};
 }
+
+export function getPostHogApiHost(config = getRuntimeConfig()): string {
+    const ingestPath = config.posthogProxyPath ?? 'ingest';
+    return `${window.location.origin}/${ingestPath}`;
+}

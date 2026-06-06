@@ -25,6 +25,7 @@ Single Docker image (`wee-forest-lens`) serves both the Astro site and Lens:
 | `/` | Astro static build (`site/dist`) |
 | `/lens*` | Lens (static UI, tiles, area API, PostHog proxy) |
 | `/runtime-config.js` | Runtime public config from container `.env` |
+| `/ingest*` | PostHog first-party proxy (shared by site and Lens) |
 
 Caddy reverse-proxies all traffic to `wee_forest_lens:3939`. See [docker/README.md](../docker/README.md), [docker/Caddyfile.wee-forest](../docker/Caddyfile.wee-forest), and [docker/docker-compose.yml](../docker/docker-compose.yml).
 
@@ -43,4 +44,4 @@ Lens must run with `STATIC_SERVER_PATH=lens` so paths match production.
 ## PostHog
 
 - Browser keys come from `/runtime-config.js` at runtime (same project for site and Lens)
-- Lens uses first-party `/lens/ingest` proxy; landing page sends directly to `POSTHOG_HOST`
+- Both site and Lens send events through the shared first-party `/ingest` proxy on the Express server

@@ -66,7 +66,7 @@ For convenience there's also a Dockerfile and Compose files available. If you wo
 
 ### Setup
 
-1. Make sure that you have created the .env file in the [docker directory](../docker/) as described in the Environment File section.
+1. Copy [docker/.env.example](../docker/.env.example) to `docker/.env` and set secrets and paths for production.
 1. If you were to use the `docker-compose.yml` provided, create a new docker network: `docker network create wee_forest_net` and add it to the `.env` file under `DOCKER_MY_NETWORK=wee_forest_net`.
 
 ### Running
@@ -80,7 +80,7 @@ Now you're ready to build & run the container:
 
 ### Deploying
 
-Pushes to `main` run the `Docker Build & Push` GitHub Action. It builds the browser assets with GitHub environment values, then publishes a multi-arch Docker image for `linux/amd64` and `linux/arm64`.
+Pushes to `main` run the `Docker Build & Push` GitHub Action. The root `Dockerfile` builds the Astro site and Lens bundle inside the image (no secrets required at build time), then publishes a multi-arch image for `linux/amd64` and `linux/arm64`. Mapbox and PostHog public keys are supplied via `docker/.env` at container runtime through `/runtime-config.js`.
 
 Images are tagged with the short git SHA:
 
@@ -107,7 +107,7 @@ Barring the registry workflow, you can also archive the image and transfer it to
 
 ### Analytics
 
-Plausible has been removed. Browser analytics now use `posthog-js` through the first-party proxy path configured by `POSTHOG_PROXY_PATH`, which forwards to `POSTHOG_HOST` server-side. The server also uses `posthog-node` to capture backend events such as area calculations.
+Plausible has been removed. Browser analytics on both the landing page and Lens use `posthog-js` through a shared first-party `/ingest` path (configurable via `POSTHOG_PROXY_PATH`), which forwards to `POSTHOG_HOST` server-side. The legacy `/lens/ingest` path is still proxied for compatibility. The server also uses `posthog-node` to capture backend events such as area calculations.
 
 ## Contributing
 

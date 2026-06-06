@@ -179,8 +179,8 @@ export class WeeForestMap {
 
         const config = getRuntimeConfig();
         this._accessToken = config.mapboxToken ?? '';
-        this._tileServerPath = config.tileServerPath ?? 'tiles';
-        this._areaServerPath = config.areaServerPath ?? 'area';
+        this._tileServerPath = config.tileServerPath ?? '/lens/tiles';
+        this._areaServerPath = config.areaServerPath ?? '/lens/area';
 
         // Setting state on load
         mapboxgl.accessToken = this._accessToken;

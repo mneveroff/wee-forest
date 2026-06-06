@@ -51,8 +51,11 @@ export default defineConfig({
     plugins: [tailwindcss(), runtimeConfigPlugin()],
     server: {
       proxy: {
-        // Mirror production Caddy routing: /lens* → Lens dev server.
-        // Requires lens STATIC_SERVER_PATH=lens and a running Lens process.
+        // Mirror production: shared PostHog ingest + Lens app routes.
+        '/ingest': {
+          target: lensDevTarget,
+          changeOrigin: true,
+        },
         '/lens': {
           target: lensDevTarget,
           changeOrigin: true,
