@@ -52,4 +52,11 @@ Server-only secrets (`POSTHOG_API_KEY` for area-calculation events) are also rea
 
 CI builds the image via the root `Dockerfile` (multi-stage: Astro + Lens bundle, no secrets required at build time).
 
-Pull requests targeting `main` run `Docker Build & Push / publish` and push `mneveroff/wee-forest-lens:<pr-head-sha>` only. Merges to `main` push `<sha>` and `:latest`. Manual **workflow dispatch** from `main` does the same as a merge; from other branches it pushes SHA only.
+CI runs two jobs on every trigger:
+
+| Job | Purpose |
+|-----|---------|
+| `build` | Build multi-arch image (no registry push); warms layer cache |
+| `publish` | Rebuild from cache and push tags (needs `production` env) |
+
+Pull requests push `<pr-head-sha>` only. Merges to `main` push `<sha>` and `:latest`. Manual **workflow dispatch** from `main` matches a merge; from other branches it pushes SHA only.
