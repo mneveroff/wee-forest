@@ -44,9 +44,12 @@ ENV npm_config_build_from_source=true
 
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
   pnpm install --filter wee-forest-lens --prod --frozen-lockfile \
-  && rm -rf node_modules/.pnpm/sqlite3@*/node_modules/sqlite3/build \
-  && pnpm rebuild sqlite3 \
-  && pnpm --filter wee-forest-lens exec node -e "require('sqlite3')" \
+  && SQLITE_DIR="$(echo node_modules/.pnpm/sqlite3@*/node_modules/sqlite3)" \
+  && rm -rf "$SQLITE_DIR/build" \
+  && cd "$SQLITE_DIR" \
+  && npm run rebuild \
+  && cd /repo \
+  && pnpm --filter wee-forest-lens exec node -e "const { createRequire } = require('node:module'); const tileserverRequire = createRequire(require.resolve('tileserver-gl-light/package.json')); tileserverRequire('@mapbox/mbtiles');" \
   && apt-get purge -y python3 make g++ \
   && apt-get autoremove -y \
   && rm -rf /var/lib/apt/lists/*
