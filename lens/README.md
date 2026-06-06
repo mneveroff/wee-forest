@@ -34,11 +34,17 @@ STATIC_DIR=../public
 
 NODE_ENV=development
 AREA_PORT=3939
+POSTHOG_API_KEY=
+POSTHOG_PUBLIC_API_KEY=
+POSTHOG_HOST=https://eu.i.posthog.com
+POSTHOG_PROXY_PATH=ingest
 ```
 
-With tis setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. `server.mjs` and `build.js` will take care of inserting the environment variables in both bundle and the server. Fields left empty are left so on purpose.
+With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. `server.mjs` and `build.js` will take care of inserting the environment variables in both bundle and the server. Fields left empty are left so on purpose.
 
 If you were inclined to serve Lens from a URLPath like it's done on [weeforest.org/lens](https://weeforest.org/lens) you would only have to set the `STATIC_SERVER_PATH` to `lens`.
+
+`MAPBOX_TOKEN` and `POSTHOG_PUBLIC_API_KEY` are build-time values for the browser bundle. Changing them on production requires a new image build. `POSTHOG_API_KEY`, `POSTHOG_HOST` and `POSTHOG_PROXY_PATH` are runtime server values.
 
 ### Development
 
@@ -72,13 +78,36 @@ Now you're ready to build & run the container:
 
 > Depending on your environment, you might need to configure buildkit/buildx or other Docker settings to build the image correctly, troubleshoot as needed.
 
+### Deploying
+
+Pushes to `main` run the `Docker Build & Push` GitHub Action. It builds the browser assets with GitHub environment values, then publishes a multi-arch Docker image for `linux/amd64` and `linux/arm64`.
+
+Images are tagged with the short git SHA:
+
+```yaml
+image: mneveroff/wee-forest-lens:<short-sha>
+```
+
+To update production after a successful workflow run:
+
+```bash
+docker compose pull wee_forest_lens
+docker compose up -d --force-recreate wee_forest_lens
+```
+
+If a workflow is re-run for the same commit, the tag is reused but the digest changes. Pull and recreate the container to pick up the rebuilt image.
+
 ### Transferring
 
-Barring the pushing to a registry, you can also archive the image and transfer it to a server via ssh:
+Barring the registry workflow, you can also archive the image and transfer it to a server via ssh:
 
 1. `docker save -o wee-forest-lens.tar wee-forest-lens:latest`.
 1. `rsync -avz --progress -e ssh wee-forest-lens.tar username@host:~/path`.
 1. On the remote machine: `docker load -i wee-forest-lens.tar && rm wee-forest-lens.tar` and finally `docker-compose down && docker-compose up -d`
+
+### Analytics
+
+Plausible has been removed. Browser analytics now use `posthog-js` through the first-party proxy path configured by `POSTHOG_PROXY_PATH`, which forwards to `POSTHOG_HOST` server-side. The server also uses `posthog-node` to capture backend events such as area calculations.
 
 ## Contributing
 
