@@ -25,6 +25,8 @@ CI tagging:
 |-------|-------------|---------------|
 | Pull request | `mneveroff/wee-forest-lens:<pr-head-sha>` only | `linux/amd64`, `linux/arm64` |
 | Merge to `main` | `<merge-sha>` and `latest` | `linux/amd64`, `linux/arm64` |
+| Manual dispatch on `main` | `<sha>` and `latest` | `linux/amd64`, `linux/arm64` |
+| Manual dispatch elsewhere | `<sha>` only | `linux/amd64`, `linux/arm64` |
 
 Production host is **arm64** (`sites-emerald`). PR SHA tags published before multi-arch was enabled are amd64-only and will not pull — re-run CI on the PR branch or use a `main` tag after merge.
 
@@ -50,7 +52,7 @@ Server-only secrets (`POSTHOG_API_KEY` for area-calculation events) are also rea
 
 ## Image build
 
-CI builds the image via the root `Dockerfile` (multi-stage: Astro + Lens bundle, no secrets required at build time).
+CI builds the image via the root `Dockerfile` (multi-stage: Astro + Lens bundle, no secrets required at build time). The image uses the official `node:24-trixie` base so tileserver's sqlite native bindings load on arm64, and the Docker build includes a tileserver/sqlite smoke test.
 
 CI runs two jobs on every trigger:
 

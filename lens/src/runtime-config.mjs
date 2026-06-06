@@ -1,12 +1,16 @@
+function normalizeSegment(segment) {
+    return segment?.replace(/^\/|\/$/g, '') || '';
+}
+
 function servicePath(staticServerPath, segment) {
-    const base = staticServerPath?.replace(/^\/|\/$/g, '');
+    const base = normalizeSegment(staticServerPath);
     return base ? `/${base}/${segment}` : `/${segment}`;
 }
 
 export function buildRuntimeConfigScript(env = process.env) {
-    const staticServerPath = env.STATIC_SERVER_PATH?.replace(/^\/|\/$/g, '') || 'lens';
-    const areaSegment = env.AREA_SERVER_PATH || 'area';
-    const tileSegment = env.TILE_SERVER_PATH || 'tiles';
+    const staticServerPath = normalizeSegment(env.STATIC_SERVER_PATH);
+    const areaSegment = normalizeSegment(env.AREA_SERVER_PATH) || 'area';
+    const tileSegment = normalizeSegment(env.TILE_SERVER_PATH) || 'tiles';
 
     const config = {
         mapboxToken: env.MAPBOX_TOKEN || '',

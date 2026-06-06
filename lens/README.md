@@ -80,9 +80,9 @@ Now you're ready to build & run the container:
 
 ### Deploying
 
-Pushes to `main` run the `Docker Build & Push` GitHub Action. The root `Dockerfile` builds the Astro site and Lens bundle inside the image (no secrets required at build time), then publishes a multi-arch image for `linux/amd64` and `linux/arm64`. Mapbox and PostHog public keys are supplied via `docker/.env` at container runtime through `/runtime-config.js`.
+The `Docker Build & Push` GitHub Action runs a multi-arch build for `linux/amd64` and `linux/arm64`, then publishes from the separate `publish` job. Pull requests publish the PR head short SHA only; merges to `main` publish the merge short SHA and `latest`. Mapbox and PostHog public keys are supplied via `docker/.env` at container runtime through `/runtime-config.js`.
 
-Images are tagged with the short git SHA and `latest` (most recent `main` build):
+Images are tagged with the short git SHA, plus `latest` for the most recent `main` build:
 
 ```yaml
 image: mneveroff/wee-forest-lens:<short-sha>

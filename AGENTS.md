@@ -1,6 +1,6 @@
 # Agent notes — wee-forest
 
-Short caveats not obvious from file layout alone. See `docker/README.md`, `site/README.md`, `lens/README.md`, and `migration/MIGRATION.md` for full instructions.
+Short caveats not obvious from file layout alone. See `docker/README.md`, `site/README.md`, and `lens/README.md` for full instructions.
 
 ## Repo layout
 
@@ -37,7 +37,7 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 
 - **Single image** `wee-forest-lens`: Express serves Astro `site/dist` at `/` and Lens at `/lens*`. Caddy reverse-proxies everything to `:3939`.
 - Reference deploy files: `docker/docker-compose.yml`, `docker/caddy-compose.yml`, `docker/Caddyfile.wee-forest`, `docker/.env.example`.
-- GitHub Actions **`docker-image.yml`** builds on push to **`main`** only; image tag is short git SHA.
+- GitHub Actions **`docker-image.yml`** runs on PRs, pushes to **`main`**, and manual dispatch. PRs publish the PR head short SHA; `main` publishes short SHA plus `latest`.
 
 ## Common mistakes
 

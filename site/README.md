@@ -39,5 +39,3 @@ Output is written to `site/dist/`. In production this output is baked into the D
 Production uses a **single Docker image** (`wee-forest-lens`) that serves both the Astro site and Lens. Caddy reverse-proxies all traffic to the container.
 
 See [docker/README.md](../docker/README.md) for compose, Caddy, and `.env` setup.
-
-Reference screenshots of the pre-migration site are in `migration/reference-snapshots/`.

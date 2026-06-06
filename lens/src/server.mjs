@@ -113,8 +113,19 @@ async function createIndexes() {
     }
 }
 
-const staticServerPath = process.env.STATIC_SERVER_PATH ? process.env.STATIC_SERVER_PATH + '/' : '';
-const postHogIngestPath = process.env.POSTHOG_PROXY_PATH || 'ingest';
+function normalizeSegment(segment) {
+    return segment?.replace(/^\/|\/$/g, '') || '';
+}
+
+function servicePath(staticSegment, segment) {
+    return '/' + [staticSegment, segment].filter(Boolean).join('/');
+}
+
+const staticServerSegment = normalizeSegment(process.env.STATIC_SERVER_PATH);
+const staticServerPath = staticServerSegment ? `${staticServerSegment}/` : '';
+const areaSegment = normalizeSegment(process.env.AREA_SERVER_PATH) || 'area';
+const tileSegment = normalizeSegment(process.env.TILE_SERVER_PATH) || 'tiles';
+const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'ingest';
 const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
 
 function createPostHogProxy(mountPath) {
@@ -147,7 +158,7 @@ if (staticServerPath) {
     app.get('/' + staticServerPath + 'runtime-config.js', serveRuntimeConfig);
 }
 
-const areaServerPath = '/' + staticServerPath + process.env.AREA_SERVER_PATH || '/';
+const areaServerPath = servicePath(staticServerSegment, areaSegment);
 app.get(areaServerPath + '/calculate_areas', limiter, async (req, res, next) => {
     try {
         const { bounds, dataset, type } = req.query;
@@ -216,8 +227,9 @@ let recreateDatabase = process.env.RECREATE_DATABASE ? process.env.RECREATE_DATA
 loadAll(process.env.PARQUET_PATH, recreateDatabase).catch(console.error)
 .then(() => createIndexes()).then(() => creatorCon.disconnectSync());
 
-const tileServerUrl = process.env.TILE_SERVER_HOST + '/' +
-staticServerPath + (process.env.TILE_SERVER_PATH || '/');
+const tileServerUrl = process.env.TILE_SERVER_HOST
+    ? `${process.env.TILE_SERVER_HOST.replace(/\/$/g, '')}${servicePath(staticServerSegment, tileSegment)}`
+    : '';
 
 function resolveLocalBin(name) {
     const binPath = path.join(__dirname, '..', 'node_modules', '.bin', name);
@@ -238,7 +250,7 @@ tileserver.on('close', (code) => {
     console.log(`tileserver-gl exited with code ${code}`);
 });
 
-const tileServerPath = staticServerPath + (process.env.TILE_SERVER_PATH || '/');
+const tileServerPath = staticServerPath + tileSegment;
 const tileServerPathRewrite = '^/' + tileServerPath;
 
 const tileserverProxy = createProxyMiddleware({

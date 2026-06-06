@@ -19,7 +19,6 @@ lens/public/dist
 !site/.env.example
 
 # Docs and reference assets not needed in the image
-migration/reference-snapshots
 research
 data/area
 data/tiles

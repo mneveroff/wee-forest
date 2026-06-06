@@ -48,7 +48,7 @@ As this repository doesn't have neither raw nor processed data attached, you wou
 1. Set up the .env file in the [lens](./lens/) directory, following the instructions in the [lens readme](./lens/README.md).
 1. With everything done, install JS packages from the repo root via `pnpm install`.
 1. Run the Lens dev server via `pnpm dev:lens`, the Astro site via `pnpm dev:site`, or both via `pnpm dev`.
-1. For production, build the combined image with `docker build -t wee-forest-lens .` and deploy using [docker/docker-compose.yml](docker/docker-compose.yml) plus [docker/Caddyfile.wee-forest](docker/Caddyfile.wee-forest). One container serves `/` (Astro) and `/lens*` (Lens); secrets are supplied via `docker/.env` at runtime.
+1. For production, deploy the combined multi-arch image published by CI using [docker/docker-compose.yml](docker/docker-compose.yml) plus [docker/Caddyfile.wee-forest](docker/Caddyfile.wee-forest). One container serves `/` (Astro) and `/lens*` (Lens); secrets are supplied via `docker/.env` at runtime. See [docker/README.md](docker/README.md) for image tags and rollout notes.
 
 ## Contributing
 
