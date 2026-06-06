@@ -55,4 +55,4 @@ ENV SITE_DIST_PATH=/repo/site/dist
 
 EXPOSE 3939
 
-CMD ["node", "src/server.mjs"]
+CMD ["pnpm", "run", "serve"]

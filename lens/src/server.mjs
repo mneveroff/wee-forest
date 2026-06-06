@@ -216,9 +216,15 @@ let recreateDatabase = process.env.RECREATE_DATABASE ? process.env.RECREATE_DATA
 loadAll(process.env.PARQUET_PATH, recreateDatabase).catch(console.error)
 .then(() => createIndexes()).then(() => creatorCon.disconnectSync());
 
-const tileServerUrl = process.env.TILE_SERVER_HOST + '/' + 
+const tileServerUrl = process.env.TILE_SERVER_HOST + '/' +
 staticServerPath + (process.env.TILE_SERVER_PATH || '/');
-const tileserver = spawn('tileserver-gl', ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
+
+function resolveLocalBin(name) {
+    const binPath = path.join(__dirname, '..', 'node_modules', '.bin', name);
+    return fs.existsSync(binPath) ? binPath : name;
+}
+
+const tileserver = spawn(resolveLocalBin('tileserver-gl'), ['-c', 'tileserver-config.json', '--public_url', tileServerUrl || '']);
 
 tileserver.stdout.on('data', (data) => {
     console.log(`tileserver-gl: ${data}`);
