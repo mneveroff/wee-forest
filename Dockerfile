@@ -13,6 +13,7 @@ RUN pnpm install --frozen-lockfile
 COPY lens/ ./lens/
 COPY site/ ./site/
 
+ENV ASTRO_TELEMETRY_DISABLED=1
 RUN pnpm build:site
 RUN pnpm --filter wee-forest-lens exec node build.js
 
