@@ -30,6 +30,7 @@ loadEnvFile(path.join(repoRoot, '../lens/.env'));
 loadEnvFile(path.join(repoRoot, '.env'));
 
 const lensDevTarget = process.env.LENS_DEV_TARGET ?? 'http://127.0.0.1:3939';
+const posthogProxyPath = process.env.POSTHOG_PROXY_PATH || 'weef';
 
 function runtimeConfigPlugin() {
   return {
@@ -51,8 +52,8 @@ export default defineConfig({
     plugins: [tailwindcss(), runtimeConfigPlugin()],
     server: {
       proxy: {
-        // Mirror production: shared PostHog ingest + Lens app routes.
-        '/ingest': {
+        // Mirror production: shared PostHog proxy + Lens app routes.
+        [`/${posthogProxyPath}`]: {
           target: lensDevTarget,
           changeOrigin: true,
         },

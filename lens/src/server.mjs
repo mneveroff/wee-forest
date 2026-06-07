@@ -125,7 +125,7 @@ const staticServerSegment = normalizeSegment(process.env.STATIC_SERVER_PATH);
 const staticServerPath = staticServerSegment ? `${staticServerSegment}/` : '';
 const areaSegment = normalizeSegment(process.env.AREA_SERVER_PATH) || 'area';
 const tileSegment = normalizeSegment(process.env.TILE_SERVER_PATH) || 'tiles';
-const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'ingest';
+const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'weef';
 const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
 
 function createPostHogProxy(mountPath) {

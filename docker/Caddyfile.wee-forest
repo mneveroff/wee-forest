@@ -4,7 +4,7 @@
 # The single wee-forest-lens image serves:
 #   /        → Astro static site
 #   /lens*   → Lens app (map, tiles, area API)
-#   /ingest* → PostHog first-party proxy (shared by site and Lens)
+#   /weef* → PostHog first-party proxy (shared by site and Lens)
 #
 # Reload after edits:
 #   docker exec -w /etc/caddy caddy caddy reload

@@ -19,6 +19,6 @@ export function getRuntimeConfig(): WeeForestRuntimeConfig {
 }
 
 export function getPostHogApiHost(config = getRuntimeConfig()): string {
-    const ingestPath = config.posthogProxyPath ?? 'ingest';
+    const ingestPath = config.posthogProxyPath ?? 'weef';
     return `${window.location.origin}/${ingestPath}`;
 }

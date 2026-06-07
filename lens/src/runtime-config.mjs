@@ -19,7 +19,7 @@ export function buildRuntimeConfigScript(env = process.env) {
         staticServerPath,
         areaServerPath: servicePath(staticServerPath, areaSegment),
         tileServerPath: servicePath(staticServerPath, tileSegment),
-        posthogProxyPath: env.POSTHOG_PROXY_PATH || 'ingest',
+        posthogProxyPath: env.POSTHOG_PROXY_PATH || 'weef',
     };
 
     return `window.__WEEFOREST_RUNTIME__=${JSON.stringify(config)};`;
