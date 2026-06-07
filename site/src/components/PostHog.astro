@@ -52,7 +52,7 @@ const devToken = import.meta.env.PUBLIC_POSTHOG_PUBLIC_API_KEY;
     const token = cfg.posthogPublicApiKey || devToken;
     if (!token) return;
 
-    const ingestPath = cfg.posthogProxyPath || 'ingest';
+    const ingestPath = cfg.posthogProxyPath || 'weef';
     posthog.init(token, {
       api_host: `${window.location.origin}/${ingestPath}`,
       ui_host: 'https://eu.posthog.com',

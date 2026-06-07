@@ -37,7 +37,7 @@ AREA_PORT=3939
 POSTHOG_API_KEY=
 POSTHOG_PUBLIC_API_KEY=
 POSTHOG_HOST=https://eu.i.posthog.com
-POSTHOG_PROXY_PATH=ingest
+POSTHOG_PROXY_PATH=weef
 ```
 
 With this setup, your tiles and area files are expected to be in the `../data` folder relative to the lens folder. Fields left empty are left so on purpose.
@@ -111,7 +111,7 @@ Barring the registry workflow, you can also archive the image and transfer it to
 
 ### Analytics
 
-Plausible has been removed. Browser analytics on both the landing page and Lens use `posthog-js` through a shared first-party `/ingest` path (configurable via `POSTHOG_PROXY_PATH`), which forwards to `POSTHOG_HOST` server-side. The legacy `/lens/ingest` path is still proxied for compatibility. The server also uses `posthog-node` to capture backend events such as area calculations.
+Plausible has been removed. Browser analytics on both the landing page and Lens use `posthog-js` through a shared first-party `/weef` path (configurable via `POSTHOG_PROXY_PATH`), which forwards to `POSTHOG_HOST` server-side. The legacy `/lens/weef` path is still proxied for compatibility. The server also uses `posthog-node` to capture backend events such as area calculations.
 
 ## Contributing
 

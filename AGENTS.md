@@ -11,7 +11,7 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 ## Local dev
 
 - Integrated dev mirrors production routing: run **`pnpm dev:lens`** and **`pnpm dev:site`**, open **`http://127.0.0.1:4321/`** (not Lens port alone for full-path testing).
-- Astro dev **proxies** `/lens*` and `/ingest` to Lens (`:3939`). Lens-only on `:3939` skips Astro quirks but is not the integrated path.
+- Astro dev **proxies** `/lens*` and `/weef` to Lens (`:3939`). Lens-only on `:3939` skips Astro quirks but is not the integrated path.
 - Lens requires **`STATIC_SERVER_PATH=lens`** in `lens/.env`.
 - For proxied dev, set **`TILE_SERVER_HOST=http://localhost:4321`** so tileserver-gl metadata URLs match the Astro origin. Direct Lens dev can use `http://localhost:3939`.
 - **`/lens` proxy works only in `astro dev`**, not `astro preview` or static `site/dist/`.
@@ -25,7 +25,7 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 
 ## PostHog
 
-- Shared first-party ingest at **`/ingest`** (both site and Lens). Legacy **`/lens/ingest`** still proxied.
+- Shared first-party PostHog proxy at **`/weef`** (both site and Lens). Legacy **`/lens/weef`** still proxied.
 - Server-side events use `POSTHOG_API_KEY` in `lens/.env` / `docker/.env` (not the public key).
 
 ## Astro trailing-slash trap
