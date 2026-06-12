@@ -12,6 +12,8 @@ minimumReleaseAgeExclude:
   - "@astrojs/*"
   - "@tailwindcss/*"
   - tailwindcss
+  - esbuild
+  - "@esbuild/*"
 
 allowBuilds:
   core-js: false
