@@ -64,5 +64,10 @@ export default defineConfig({
       },
     },
   },
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // Lens is served by Express, not Astro routes — include it explicitly.
+      customPages: ['https://weeforest.org/lens/'],
+    }),
+  ],
 });

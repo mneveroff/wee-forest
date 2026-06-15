@@ -262,9 +262,41 @@ const tileserverProxy = createProxyMiddleware({
 
 app.use('/' + tileServerPath, limiter, tileserverProxy);
 
+const siteDistPath = process.env.SITE_DIST_PATH || path.join(__dirname, '../../site/dist');
+
+// Ghost-era URLs → current site (301 so Search Console passes equity to /).
+for (const [from, to] of [
+    ['/home', '/'],
+    ['/home/', '/'],
+    ['/sitemap.xml', '/sitemap-index.xml'],
+]) {
+    app.get(from, (_req, res) => res.redirect(301, to));
+}
+
+app.get(/^\/author\/?/, (_req, res) => res.redirect(301, '/'));
+
+if (staticServerSegment) {
+    const lensPath = servicePath(staticServerSegment);
+    app.get(lensPath, (_req, res) => res.redirect(301, `${lensPath}/`));
+    app.get(`${lensPath}/`, (req, res, next) => {
+        if (Object.keys(req.query).length > 0) {
+            res.redirect(301, `${lensPath}/`);
+            return;
+        }
+        next();
+    });
+}
+
+const robotsTxtPath = path.join(siteDistPath, 'robots.txt');
+if (fs.existsSync(robotsTxtPath)) {
+    app.get('/robots.txt', limiter, (_req, res) => {
+        res.type('text/plain');
+        res.sendFile(robotsTxtPath);
+    });
+}
+
 app.use('/' + staticServerPath, limiter, express.static(path.join(__dirname, process.env.STATIC_DIR || 'public')));
 
-const siteDistPath = process.env.SITE_DIST_PATH || path.join(__dirname, '../../site/dist');
 if (fs.existsSync(siteDistPath)) {
     app.use(limiter, express.static(siteDistPath, { index: 'index.html', extensions: ['html'] }));
     console.log(`Serving Astro site from ${siteDistPath}`);
