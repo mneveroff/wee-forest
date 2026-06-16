@@ -125,7 +125,7 @@ const staticServerSegment = normalizeSegment(process.env.STATIC_SERVER_PATH);
 const staticServerPath = staticServerSegment ? `${staticServerSegment}/` : '';
 const areaSegment = normalizeSegment(process.env.AREA_SERVER_PATH) || 'area';
 const tileSegment = normalizeSegment(process.env.TILE_SERVER_PATH) || 'tiles';
-const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'weef';
+const postHogProxyPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'weef';
 const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
 
 function createPostHogProxy(mountPath) {
@@ -138,13 +138,13 @@ function createPostHogProxy(mountPath) {
     });
 }
 
-// Shared first-party ingest for Astro (/) and Lens (/lens).
-app.use('/' + postHogIngestPath, createPostHogProxy(postHogIngestPath));
+// Shared first-party PostHog proxy at /weef for Astro (/) and Lens (/lens).
+app.use('/' + postHogProxyPath, createPostHogProxy(postHogProxyPath));
 
-// Legacy path kept for in-flight clients or bookmarks.
+// Legacy /lens/weef path kept for in-flight clients or bookmarks.
 if (staticServerPath) {
-    const legacyIngestPath = staticServerPath + postHogIngestPath;
-    app.use('/' + legacyIngestPath, createPostHogProxy(legacyIngestPath));
+    const legacyPostHogProxyPath = staticServerPath + postHogProxyPath;
+    app.use('/' + legacyPostHogProxyPath, createPostHogProxy(legacyPostHogProxyPath));
 }
 
 function serveRuntimeConfig(_req, res) {
@@ -275,6 +275,13 @@ for (const [from, to] of [
 
 app.get(/^\/author\/?/, (_req, res) => res.redirect(301, '/'));
 
+const lensTrackingParams = new Set(['ref', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']);
+
+function isLensTrackingQuery(query) {
+    const keys = Object.keys(query);
+    return keys.length > 0 && keys.every((key) => lensTrackingParams.has(key));
+}
+
 if (staticServerSegment) {
     const lensPath = servicePath(staticServerSegment);
     app.use((req, res, next) => {
@@ -283,10 +290,15 @@ if (staticServerSegment) {
             return;
         }
         if (req.path === lensPath) {
-            res.redirect(301, `${lensPath}/`);
+            const search = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+            if (!search || isLensTrackingQuery(req.query)) {
+                res.redirect(301, `${lensPath}/`);
+                return;
+            }
+            res.redirect(301, `${lensPath}/${search}`);
             return;
         }
-        if (req.path === `${lensPath}/` && Object.keys(req.query).length > 0) {
+        if (req.path === `${lensPath}/` && isLensTrackingQuery(req.query)) {
             res.redirect(301, `${lensPath}/`);
             return;
         }

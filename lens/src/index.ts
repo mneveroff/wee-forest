@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     
     const [lat, lng, zoom, pitch] = params.get('c')?.split(',').map(parseFloat) || [defaultCoords.lat, defaultCoords.lng, defaultCoords.zoom, defaultCoords.pitch];
     const selectedMode = params.get('m') as MapModeTypes || MapModeTypes.Static;
-    const selectedDataset = params.get('l') as DatasetTypes || DatasetTypes.NFI_AWI_Overlay;
+    const selectedDataset = (params.get('l') ?? params.get('d')) as DatasetTypes || DatasetTypes.NFI_AWI_Overlay;
     const selectedBasemap = params.get('b') as BaseMapType || BaseMapType.Light;
 
     const selectedDatasetDataTypeId = params.get('t') as DatasetDataTypes || undefined;
