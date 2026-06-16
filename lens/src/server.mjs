@@ -125,7 +125,7 @@ const staticServerSegment = normalizeSegment(process.env.STATIC_SERVER_PATH);
 const staticServerPath = staticServerSegment ? `${staticServerSegment}/` : '';
 const areaSegment = normalizeSegment(process.env.AREA_SERVER_PATH) || 'area';
 const tileSegment = normalizeSegment(process.env.TILE_SERVER_PATH) || 'tiles';
-const postHogIngestPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'weef';
+const postHogProxyPath = normalizeSegment(process.env.POSTHOG_PROXY_PATH) || 'weef';
 const postHogTarget = process.env.POSTHOG_HOST || 'https://eu.i.posthog.com';
 
 function createPostHogProxy(mountPath) {
@@ -138,13 +138,13 @@ function createPostHogProxy(mountPath) {
     });
 }
 
-// Shared first-party ingest for Astro (/) and Lens (/lens).
-app.use('/' + postHogIngestPath, createPostHogProxy(postHogIngestPath));
+// Shared first-party PostHog proxy at /weef for Astro (/) and Lens (/lens).
+app.use('/' + postHogProxyPath, createPostHogProxy(postHogProxyPath));
 
-// Legacy path kept for in-flight clients or bookmarks.
+// Legacy /lens/weef path kept for in-flight clients or bookmarks.
 if (staticServerPath) {
-    const legacyIngestPath = staticServerPath + postHogIngestPath;
-    app.use('/' + legacyIngestPath, createPostHogProxy(legacyIngestPath));
+    const legacyPostHogProxyPath = staticServerPath + postHogProxyPath;
+    app.use('/' + legacyPostHogProxyPath, createPostHogProxy(legacyPostHogProxyPath));
 }
 
 function serveRuntimeConfig(_req, res) {
