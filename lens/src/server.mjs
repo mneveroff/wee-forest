@@ -275,6 +275,13 @@ for (const [from, to] of [
 
 app.get(/^\/author\/?/, (_req, res) => res.redirect(301, '/'));
 
+const lensTrackingParams = new Set(['ref', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']);
+
+function isLensTrackingQuery(query) {
+    const keys = Object.keys(query);
+    return keys.length > 0 && keys.every((key) => lensTrackingParams.has(key));
+}
+
 if (staticServerSegment) {
     const lensPath = servicePath(staticServerSegment);
     app.use((req, res, next) => {
@@ -283,10 +290,15 @@ if (staticServerSegment) {
             return;
         }
         if (req.path === lensPath) {
-            res.redirect(301, `${lensPath}/`);
+            const search = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
+            if (!search || isLensTrackingQuery(req.query)) {
+                res.redirect(301, `${lensPath}/`);
+                return;
+            }
+            res.redirect(301, `${lensPath}/${search}`);
             return;
         }
-        if (req.path === `${lensPath}/` && Object.keys(req.query).length > 0) {
+        if (req.path === `${lensPath}/` && isLensTrackingQuery(req.query)) {
             res.redirect(301, `${lensPath}/`);
             return;
         }
