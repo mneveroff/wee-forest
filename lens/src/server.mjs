@@ -277,9 +277,16 @@ app.get(/^\/author\/?/, (_req, res) => res.redirect(301, '/'));
 
 if (staticServerSegment) {
     const lensPath = servicePath(staticServerSegment);
-    app.get(lensPath, (_req, res) => res.redirect(301, `${lensPath}/`));
-    app.get(`${lensPath}/`, (req, res, next) => {
-        if (Object.keys(req.query).length > 0) {
+    app.use((req, res, next) => {
+        if (req.method !== 'GET' && req.method !== 'HEAD') {
+            next();
+            return;
+        }
+        if (req.path === lensPath) {
+            res.redirect(301, `${lensPath}/`);
+            return;
+        }
+        if (req.path === `${lensPath}/` && Object.keys(req.query).length > 0) {
             res.redirect(301, `${lensPath}/`);
             return;
         }
