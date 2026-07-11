@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMap, {
     AttributionControl,
     Layer,
@@ -8,7 +8,13 @@ import ReactMap, {
     type MapRef,
     type ViewStateChangeEvent,
 } from 'react-map-gl/mapbox';
-import type { ExpressionSpecification, FilterSpecification, MapboxGeoJSONFeature } from 'mapbox-gl';
+import type {
+    ExpressionSpecification,
+    FilterSpecification,
+    GeoJSONSourceSpecification,
+    MapboxGeoJSONFeature,
+    StyleSpecification,
+} from 'mapbox-gl';
 import { ExtendedDatasetDataTypes } from '@/models/dataset';
 import { BaseMaps, BaseMapType } from '@/models/lens-config';
 import { getDataset, getDatasetDataType } from '@/models/lens-store';
@@ -17,12 +23,26 @@ import type { MapBounds } from '@/components/lens-legend';
 
 type LensMapProps = {
     clipLeft?: number;
+    mapSource?: LensMapSource;
+    mapStyleOverride?: StyleSpecification;
     mapRole: 'primary' | 'comparison';
     mapboxToken: string;
     onBoundsChange: (bounds: MapBounds) => void;
+    onIdle?: () => void;
     tileServerPath: string;
     year: number;
 };
+
+export type LensMapSource =
+    | {
+        type: 'geojson';
+        data: GeoJSONSourceSpecification['data'];
+    }
+    | {
+        type: 'vector';
+        sourceLayer: string;
+        url: string;
+    };
 
 type PopupState = {
     feature: MapboxGeoJSONFeature;
@@ -35,13 +55,17 @@ const maxBounds: [[number, number], [number, number]] = [[-12, 48], [7, 61]];
 
 export function LensMap({
     clipLeft,
+    mapSource,
+    mapStyleOverride,
     mapRole,
     mapboxToken,
     onBoundsChange,
+    onIdle,
     tileServerPath,
     year,
 }: LensMapProps) {
     const mapRef = useRef<MapRef>(null);
+    const modeId = useLensStore((state) => state.modeId);
     const datasetId = useLensStore((state) => state.datasetId);
     const datasetDataTypeId = useLensStore((state) => state.datasetDataTypeId);
     const basemapId = useLensStore((state) => state.basemapId);
@@ -53,7 +77,15 @@ export function LensMap({
     const sourceId = `${dataset.id}_${year}_${mapRole}`;
     const layerId = `${sourceId}_fill`;
     const [popup, setPopup] = useState<PopupState | null>(null);
-    const mapStyle = BaseMaps.find((basemap) => basemap.id === basemapId)?.style ?? BaseMapType.Fallback;
+    const [mapIdle, setMapIdle] = useState(false);
+    const mapStyle = mapStyleOverride
+        ?? BaseMaps.find((basemap) => basemap.id === basemapId)?.style
+        ?? BaseMapType.Fallback;
+    const source: LensMapSource = mapSource ?? {
+        type: 'vector',
+        sourceLayer: dataset.datasetLayerId,
+        url: `${tileServerPath}/data/${dataset.datasetIdPrefix}${year}.json`,
+    };
     const fillColor = useMemo(() => [
         'match',
         ['get', dataType.value],
@@ -83,6 +115,7 @@ export function LensMap({
 
     const handleMove = useCallback((event: ViewStateChangeEvent) => {
         const { latitude, longitude, zoom, pitch, bearing } = event.viewState;
+        setPopup(null);
         setViewState({ latitude, longitude, zoom, pitch, bearing });
     }, [setViewState]);
 
@@ -103,6 +136,22 @@ export function LensMap({
         });
     }, []);
 
+    useEffect(() => {
+        const frame = window.requestAnimationFrame(() => {
+            mapRef.current?.resize();
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [modeId]);
+
+    useEffect(() => {
+        setMapIdle(false);
+    }, [mapStyle, sourceId]);
+
+    const handleIdle = useCallback(() => {
+        setMapIdle(true);
+        onIdle?.();
+    }, [onIdle]);
+
     return (
         <div
             id={mapRole === 'primary' ? 'map-main' : 'map-compare'}
@@ -120,6 +169,7 @@ export function LensMap({
                 mapStyle={mapStyle}
                 maxBounds={maxBounds}
                 onClick={(event) => showPopup(event, 'click')}
+                onIdle={handleIdle}
                 onLoad={publishBounds}
                 onMouseLeave={() => {
                     setPopup((current) => current?.mode === 'hover' ? null : current);
@@ -134,30 +184,40 @@ export function LensMap({
                 style={{ height: '100%', width: '100%' }}
             >
                 <AttributionControl compact={window.innerWidth <= 1340} />
-                <Source
-                    key={sourceId}
-                    id={sourceId}
-                    type="vector"
-                    url={`${tileServerPath}/data/${dataset.datasetIdPrefix}${year}.json`}
-                >
-                    <Layer
-                        id={layerId}
-                        type="fill"
-                        source-layer={dataset.datasetLayerId}
-                        filter={filter}
-                        paint={{
-                            'fill-color': fillColor,
-                            'fill-opacity': 0.5,
-                            'fill-opacity-transition': { duration: 1000 },
-                        }}
-                    />
-                </Source>
-                {popup ? (
+                {source.type === 'vector' ? (
+                    <Source key={sourceId} id={sourceId} type="vector" url={source.url}>
+                        <Layer
+                            id={layerId}
+                            type="fill"
+                            source-layer={source.sourceLayer}
+                            filter={filter}
+                            paint={{
+                                'fill-color': fillColor,
+                                'fill-opacity': 0.5,
+                                'fill-opacity-transition': { duration: 1000 },
+                            }}
+                        />
+                    </Source>
+                ) : (
+                    <Source key={sourceId} id={sourceId} type="geojson" data={source.data}>
+                        <Layer
+                            id={layerId}
+                            type="fill"
+                            filter={filter}
+                            paint={{
+                                'fill-color': fillColor,
+                                'fill-opacity': 0.5,
+                                'fill-opacity-transition': { duration: 1000 },
+                            }}
+                        />
+                    </Source>
+                )}
+                {popup && mapIdle ? (
                     <ReactMapPopup
                         className="wee-map-popup"
                         closeButton
-                        closeOnClick
-                        closeOnMove
+                        closeOnClick={false}
+                        closeOnMove={false}
                         latitude={popup.latitude}
                         longitude={popup.longitude}
                         maxWidth="320px"

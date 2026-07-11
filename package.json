@@ -8,7 +8,9 @@
   "scripts": {
     "dev": "concurrently \"pnpm dev:lens\" \"pnpm dev:site\"",
     "dev:lens": "pnpm --filter wee-forest-lens dev",
+    "dev:map-harness": "pnpm --filter wee-forest-lens dev:map-harness",
     "dev:site": "pnpm --filter @wee-forest/site dev",
+    "test:map-harness": "pnpm --filter wee-forest-lens test:map-harness",
     "lint": "oxlint .",
     "typecheck": "pnpm typecheck:lens && pnpm typecheck:site",
     "typecheck:lens": "tsc --noEmit -p lens/tsconfig.json",

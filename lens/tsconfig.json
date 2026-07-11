@@ -6,6 +6,7 @@
         "jsx": "react-jsx",
         "strict": true,
         "lib": ["ES2022", "DOM"],
+        "types": ["vite/client"],
         "paths": {
             "@/*": ["./src/*"]
         },
@@ -13,5 +14,5 @@
         "skipLibCheck": true,
         "noEmit": true
     },
-    "include": ["src"]
+    "include": ["src", "test-harness", "vite.map-harness.config.ts"]
 }

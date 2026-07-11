@@ -38,7 +38,10 @@ export default defineConfig({
                 },
                 test: {
                     name: 'browser',
-                    include: ['lens/src/**/*.browser.test.{ts,tsx}', 'site/src/**/*.browser.test.{ts,tsx}'],
+                    include: [
+                        'lens/src/**/*.browser.test.{ts,tsx}',
+                        'site/src/**/*.browser.test.{ts,tsx}',
+                    ],
                     browser: {
                         enabled: true,
                         headless: true,

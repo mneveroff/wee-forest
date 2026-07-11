@@ -1,13 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { StyleSpecification } from 'mapbox-gl';
 import type { WeeForestRuntimeConfig } from '@/client-config';
 import { BaseMapType, MapModeTypes } from '@/models/lens-config';
 import { serializeLensUrl } from '@/models/lens-url';
 import { BaseMapSelector, DatasetSelector, ModeSelector } from '@/components/lens-controls';
 import { LensLegend, type MapBounds } from '@/components/lens-legend';
-import { LensMap } from '@/components/lens-map';
+import { LensMap, type LensMapSource } from '@/components/lens-map';
 import { useLensStore } from '@/components/lens-store-context';
 
-export function LensApp({ runtimeConfig }: { runtimeConfig: WeeForestRuntimeConfig }) {
+type LensAppProps = {
+    mapSourceFactory?: (year: number, role: 'primary' | 'comparison') => LensMapSource;
+    mapStyleOverride?: StyleSpecification;
+    onMapIdle?: (role: 'primary' | 'comparison') => void;
+    runtimeConfig: WeeForestRuntimeConfig;
+    showLegend?: boolean;
+};
+
+export function LensApp({
+    mapSourceFactory,
+    mapStyleOverride,
+    onMapIdle,
+    runtimeConfig,
+    showLegend = true,
+}: LensAppProps) {
     const modeId = useLensStore((state) => state.modeId);
     const datasetYear = useLensStore((state) => state.datasetYear);
     const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
@@ -21,6 +36,8 @@ export function LensApp({ runtimeConfig }: { runtimeConfig: WeeForestRuntimeConf
     const areaServerPath = runtimeConfig.areaServerPath ?? '/lens/area';
     const setPrimaryMapBounds = useCallback((bounds: MapBounds) => setPrimaryBounds(bounds), []);
     const setComparisonMapBounds = useCallback((bounds: MapBounds) => setComparisonBounds(bounds), []);
+    const notifyPrimaryIdle = useCallback(() => onMapIdle?.('primary'), [onMapIdle]);
+    const notifyComparisonIdle = useCallback(() => onMapIdle?.('comparison'), [onMapIdle]);
 
     useLensUrlSync();
 
@@ -43,11 +60,13 @@ export function LensApp({ runtimeConfig }: { runtimeConfig: WeeForestRuntimeConf
     return (
         <>
             <div className="widget-container right-widget-container">
-                <LensLegend
-                    areaServerPath={areaServerPath}
-                    primaryBounds={primaryBounds}
-                    comparisonBounds={comparisonBounds}
-                />
+                {showLegend ? (
+                    <LensLegend
+                        areaServerPath={areaServerPath}
+                        primaryBounds={primaryBounds}
+                        comparisonBounds={comparisonBounds}
+                    />
+                ) : null}
                 <DatasetSelector />
             </div>
             <div className="widget-container left-widget-container">
@@ -57,7 +76,10 @@ export function LensApp({ runtimeConfig }: { runtimeConfig: WeeForestRuntimeConf
             <LensMap
                 mapboxToken={mapboxToken}
                 mapRole="primary"
+                mapSource={mapSourceFactory?.(datasetYear, 'primary')}
+                mapStyleOverride={mapStyleOverride}
                 onBoundsChange={setPrimaryMapBounds}
+                onIdle={notifyPrimaryIdle}
                 tileServerPath={tileServerPath}
                 year={datasetYear}
             />
@@ -66,7 +88,10 @@ export function LensApp({ runtimeConfig }: { runtimeConfig: WeeForestRuntimeConf
                     clipLeft={modeId === MapModeTypes.Swipe ? swipePosition : undefined}
                     mapboxToken={mapboxToken}
                     mapRole="comparison"
+                    mapSource={mapSourceFactory?.(compareDatasetYear, 'comparison')}
+                    mapStyleOverride={mapStyleOverride}
                     onBoundsChange={setComparisonMapBounds}
+                    onIdle={notifyComparisonIdle}
                     tileServerPath={tileServerPath}
                     year={compareDatasetYear}
                 />

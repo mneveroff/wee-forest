@@ -53,6 +53,8 @@ Browser-facing values (`MAPBOX_TOKEN`, `POSTHOG_PUBLIC_API_KEY`, path prefixes) 
 1. Complete data preparation, resulting in 23 mbtiles and 23 parquet files, 11 per each year for NFI and NFIxAWI overlay and 1 for AWI only.
 1. From the repo root, run `pnpm dev:lens` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
 
+For map interaction and comparison-mode debugging, run `pnpm dev:map-harness` and open `http://127.0.0.1:4174/`. The harness reads `MAPBOX_TOKEN` from `lens/.env`, but all rendered map data is local GeoJSON made of obvious rectangles over a plain ocean background. Run its isolated Browser suite with `pnpm test:map-harness`. The harness is outside the production entry graph and is not included in Lens builds.
+
 If you're using VSCode you should also find `dev` and `prod` configurations in the `.vscode/launch.json` file, allowing you to attach the debugger to the browser directly.
 
 > Note that the configuration is rather crude and assumes you're using Brave on MacOS. You might need to adjust the browser path and the port if you're using a different setup.
