@@ -45,3 +45,17 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 - Assuming esbuild `define` still inlines env vars — removed; clients read `window.__WEEFOREST_RUNTIME__`.
 - Using `astro preview` to test `/lens` routing — use `astro dev` + running Lens.
 - Putting secrets in Dockerfile build args or CI lens build step — use runtime `.env` on the server.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in the WeeForest Linear project. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Linear triage uses the five canonical workflow labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repository uses a single-context domain documentation layout. See `docs/agents/domain.md`.
