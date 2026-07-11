@@ -53,9 +53,9 @@ export class ModeSelector {
         const mapModes = MapModes.filter(m => this._datasetConfig.modeAvailableIds.includes(m.id)).map(m => {
             const isSelected = m.id === this._selectedMode;
             return html`
-                <div class="selector-row-item${isSelected ? ' selected' : ''}" data-type="${m.id}" @click=${(e: Event) => this.onToggleChange(e)}>
+                <button type="button" class="selector-row-item${isSelected ? ' selected' : ''}" data-type="${m.id}" aria-pressed="${isSelected}" @click=${(e: Event) => this.onToggleChange(e)}>
                     ${m.label}
-                </div>
+                </button>
             `;
         });
 
@@ -81,7 +81,7 @@ export class ModeSelector {
     getSliderControl(startYear: number, endYear: number) {
         return html`
             <span class="slider-label">${this._selectedYear}</span>
-            <input type="range" min="${startYear}" max="${endYear}" value="${this._selectedYear}" @input=${(e: Event) => this._setDatasetYear((e.target as HTMLInputElement).valueAsNumber)} />
+            <input aria-label="Dataset year" type="range" min="${startYear}" max="${endYear}" value="${this._selectedYear}" @input=${(e: Event) => this._setDatasetYear((e.target as HTMLInputElement).valueAsNumber)} />
         `;
     }
     
@@ -89,11 +89,11 @@ export class ModeSelector {
     getPickerControl(startYear: number, endYear: number) {
         const years = Array.from({length: endYear - startYear + 1}, (_, i) => startYear + i);
         return html`
-            <select @change=${(e: Event) => this.onYearChange(e, false)}>
+            <select aria-label="Primary year" @change=${(e: Event) => this.onYearChange(e, false)}>
                 ${years.map(year => html`<option value="${year}" .selected=${live(year === this._selectedYear)} ?disabled=${year === this._selectedCompareYear}>${year}</option>`)}
             </select>
-            <span class="icon swap-years" @click=${() => this._swapYears()}></span>
-            <select @change=${(e: Event) => this.onYearChange(e, true)}>
+            <button type="button" class="icon swap-years" aria-label="Swap years" @click=${() => this._swapYears()}></button>
+            <select aria-label="Comparison year" @change=${(e: Event) => this.onYearChange(e, true)}>
                 ${years.map(year => html`<option value="${year}" .selected=${live(year === this._selectedCompareYear)} ?disabled=${year === this._selectedYear}>${year}</option>`)}
             </select>
         `;
@@ -113,7 +113,7 @@ export class ModeSelector {
     }
 
     onToggleChange(event: Event) {
-        const element = event.target as HTMLSelectElement;
+        const element = event.currentTarget as HTMLButtonElement;
         this._updateMapMode(element.dataset.type as MapModeTypes);
     }
 }

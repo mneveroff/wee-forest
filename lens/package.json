@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "start-tileserver": "tileserver-gl -c tileserver-config.json",
-    "watch-dev": "pnpm install && node build.dev.js",
+    "watch-dev": "node build.dev.js",
     "serve-dev": "nodemon src/server.mjs",
     "dev": "concurrently \"pnpm run watch-dev\" \"pnpm run serve-dev\"",
-    "build": "pnpm install && node build.js",
+    "build": "node build.js",
     "serve": "node src/server.mjs",
     "prod": "pnpm run build && pnpm run serve",
     "docker:build": "pnpm run build && docker build --build-arg GIT_HASH=$(git rev-parse --short HEAD) -t wee-forest-lens --no-cache ../",
@@ -44,7 +44,7 @@
     "posthog-node": "^5.35.6",
     "tileserver-gl-light": "^5.6.0"
   },
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": "24.x"
   },

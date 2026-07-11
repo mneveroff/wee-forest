@@ -204,6 +204,7 @@ mapboxgl-ctrl-bottom-right {
     .widget-toggle-container {
         position: absolute;
         padding: 6px;
+        border: 0;
 
         height: 80%;
         max-height: 48px;
@@ -369,8 +370,12 @@ mapboxgl-ctrl-bottom-right {
         cursor: pointer;
 
         padding: 8px;
+        border: 0;
         flex-grow: 1;
         text-align: center;
+        color: inherit;
+        background: transparent;
+        font: inherit;
 
         &.selected {
             background-color: var(--dg-color-surface-primary--selected);
@@ -431,6 +436,9 @@ mapboxgl-ctrl-bottom-right {
             cursor: pointer;
             width: 64px;
             height: 24px;
+            padding: 0;
+            border: 0;
+            background-color: transparent;
 
             background-image: url(../assets/icon/swap.svg);
         }

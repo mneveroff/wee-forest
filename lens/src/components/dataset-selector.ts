@@ -41,9 +41,9 @@ export class DatasetSelector {
         const dataTypeRows = this._datasetConfig.dataTypes.map(dt => {
             const isSelected = this._datasetDataTypeId === dt.id;
             return html`
-                <div class="selector-row-item${isSelected ? ' selected' : ''}" data-type="${dt.id}" @click=${(e: Event) => this.onToggleChange(e)}>
+                <button type="button" class="selector-row-item${isSelected ? ' selected' : ''}" data-type="${dt.id}" aria-pressed="${isSelected}" @click=${(e: Event) => this.onToggleChange(e)}>
                     ${dt.label}
-                </div>
+                </button>
             `;
         });
     
@@ -56,7 +56,7 @@ export class DatasetSelector {
                     <span>Dataset</span>
                 </div>
                 <div class="widget-selector-dropdown">
-                    <select @change=${(e: Event) => this.onSelectChange(e)}>
+                    <select aria-label="Dataset" @change=${(e: Event) => this.onSelectChange(e)}>
                         ${datasets}
                     </select>
                 </div>
@@ -66,7 +66,7 @@ export class DatasetSelector {
     }
 
     onToggleChange(event: Event) {
-        const element = event.target as HTMLSelectElement;
+        const element = event.currentTarget as HTMLButtonElement;
         this._setDatasetDataType(element.dataset.type as DatasetDataTypes);
         this.render();
     }

@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import", "typescript"],
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn"
+  },
+  "rules": {
+    "eslint/no-new": "off",
+    "eslint/no-underscore-dangle": "off",
+    "eslint/no-useless-constructor": "off",
+    "import/no-unassigned-import": "off"
+  },
+  "ignorePatterns": [
+    "coverage/**",
+    "lens/public/**",
+    "site/public/vendor/**"
+  ],
+  "options": {
+    "denyWarnings": true
+  },
+  "overrides": [
+    {
+      "files": ["site/src/components/PostHog.astro"],
+      "rules": {
+        "eslint/no-shadow": "off",
+        "eslint/no-unused-expressions": "off",
+        "oxc/number-arg-out-of-range": "off"
+      }
+    }
+  ]
+}

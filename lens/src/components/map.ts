@@ -8,6 +8,8 @@ import { BaseMapSelector, BaseMapType, BaseMaps } from './basemap-selector';
 import { ModeSelector, MapModeTypes, MapModes } from './mode-selector';
 import { DatasetSelector } from './dataset-selector';
 import { DatasetTypes, DatasetDataTypes, DatasetConfigs, DatasetConfig, DatasetDataType, FeatureSetting } from '../models/dataset';
+import { serializeLensUrl } from '../models/lens-url';
+import { WeeForestMapStateManager, type WeeForestMapState } from '../models/map-state';
 import { getRuntimeConfig } from '../client-config';
 
 // Default for the UK&I to be visible in the middle
@@ -45,97 +47,6 @@ class UpdateQueue {
             this.queue = [];
             this.timeout = null;
         }, updateTimeout);
-    }
-}
-
-type WeeForestMapState = {
-    modeId: MapModeTypes;
-    datasetId: DatasetTypes;
-    datasetDataTypeId: DatasetDataTypes;
-    basemapId: BaseMapType;
-    features: FeatureSetting[];
-    datasetYear: number;
-    compareDatasetYear: number;
-}
-
-class WeeForestMapStateManager {
-    private _state: WeeForestMapState;
-    private _listeners: { [K in keyof WeeForestMapState]?: Array<(state: WeeForestMapState[K], oldState: WeeForestMapState[K]) => void> } = {};
-
-    constructor(initialState: WeeForestMapState) {
-        this._state = initialState;
-    }
-
-    get modeId(): MapModeTypes {
-        return this._state.modeId;
-    }
-
-    get datasetId(): DatasetTypes {
-        return this._state.datasetId;
-    }
-
-    get datasetDataTypeId(): DatasetDataTypes {
-        return this._state.datasetDataTypeId;
-    }
-
-    get basemapId(): BaseMapType {
-        return this._state.basemapId;
-    }
-
-    get features(): FeatureSetting[] {
-        return this._state.features;
-    }
-
-    get datasetYear(): number {
-        return this._state.datasetYear;
-    }
-
-    get compareDatasetYear(): number {
-        return this._state.compareDatasetYear;
-    }
-
-    addListener<K extends keyof WeeForestMapState>(listeners: { [P in K]?: ((state: WeeForestMapState[P], oldState: WeeForestMapState[P]) => void)[] }): void {
-        for (const prop in listeners) {
-            const propListeners = listeners[prop as K];
-            if (propListeners) {
-                if (!this._listeners[prop as K]) {
-                    this._listeners[prop as K] = [];
-                }
-                this._listeners[prop as K]!.push(...propListeners);
-            }
-        }
-    }
-
-    set(newState: Partial<WeeForestMapState>): Promise<void> {
-        return new Promise(resolve => {
-            const oldState = { ...this._state };
-            this._state = { ...this._state, ...newState };
-    
-            // Collect the listeners for each updated property
-            const listenersToCall: { [K in keyof WeeForestMapState]?: Array<(state: WeeForestMapState[K], oldState: WeeForestMapState[K]) => void> } = {};
-            for (const prop in newState) {
-                const listeners = this._listeners[prop as keyof WeeForestMapState];
-                if (listeners) {
-                    listenersToCall[prop as keyof WeeForestMapState] = listeners as any;
-                }
-            }
-    
-            const flattenedListeners = Object.entries(listenersToCall).reduce((acc, [prop, listeners]) => acc.concat(listeners.map(listener => ({ listener, prop }))), [] as any[]);
-            let uniqueListeners: any[] = [];
-            for (let i = flattenedListeners.length - 1; i >= 0; i--) {
-                if (!uniqueListeners.find(obj => obj.listener.toString() === flattenedListeners[i].listener.toString())) {
-                    uniqueListeners.unshift(flattenedListeners[i]);
-                }
-            }
-    
-            for (const { listener, prop } of uniqueListeners) {
-                const newValue = this._state[prop as keyof WeeForestMapState];
-                const oldValue = oldState[prop as keyof WeeForestMapState];
-                listener(newValue, oldValue);
-            }
-    
-            resolve();
-        });
     }
 }
 
@@ -205,7 +116,7 @@ export class WeeForestMap {
         this._baseMapSelector = new BaseMapSelector(this._leftWidgetContainer, this._state.basemapId, this.updateBaseMap.bind(this));
         this._modeSelector = new ModeSelector(this._leftWidgetContainer, this.getDataset(), this._state.modeId, this._state.datasetYear, this._state.compareDatasetYear, this.updateMapMode.bind(this), this.updateDatasetYear.bind(this), this.updateDatasetCompareYear.bind(this), this.swapYears.bind(this));
         
-        this._legend = new Legend(this._rightWidgetContainer, this._areaServerPath, this.toggleType.bind(this), this.toggleAdvancedControls.bind(this), this.getDatasetId(),this._state.datasetYear!, undefined, undefined, this.getDatasetDataType(), this._state.features.filter(f => f.enabled), [this._map.getBounds()]);
+        this._legend = new Legend(this._rightWidgetContainer, this._areaServerPath, this.toggleType.bind(this), this.toggleAdvancedControls.bind(this), this.getDatasetId(),this._state.datasetYear!, undefined, undefined, this.getDatasetDataType(), this._state.features.filter(f => f.enabled), [this._map.getBounds()!]);
         this._datasetSelector = new DatasetSelector(this._rightWidgetContainer, this.getDataset(), this._state.datasetId, this._state.datasetDataTypeId, this.updateDataset.bind(this), this.updateDatasetDataType.bind(this));
 
         // Setting the current map mode
@@ -346,7 +257,7 @@ export class WeeForestMap {
                     this._mapContainer.parentElement?.classList.remove('mode-split');
                     this._map.off('move', this.handleMainMapMove);
                     this._compareContainer.remove();
-                } catch (e) {}
+                } catch {}
 
                 if (this._linkedMapContainer) { 
                     this._linkedMapContainer.remove(); 
@@ -361,7 +272,7 @@ export class WeeForestMap {
                 this._linkedSyncing = false;
                 
                 this._legend.updateLegendData(this.getDatasetId(), this._state.datasetYear!, this.getDatasetDataType());
-                this._legend.updateLegend([this._map.getBounds()], this._state.features.filter(f => f.enabled));
+                this._legend.updateLegend([this._map.getBounds()!], this._state.features.filter(f => f.enabled));
                 this._map.resize();
             } break;
             case MapModeTypes.Split: {
@@ -392,7 +303,7 @@ export class WeeForestMap {
                 }
 
                 this._legend.updateLegendData(this.getDatasetId(), this._state.datasetYear!, this.getDatasetDataType(), this.getDatasetId(true), this._state.compareDatasetYear!);
-                this._legend.updateLegend([this._map.getBounds(), this._linkedMap!.getBounds()], this._state.features.filter(f => f.enabled));
+                this._legend.updateLegend([this._map.getBounds()!, this._linkedMap!.getBounds()!], this._state.features.filter(f => f.enabled));
             } break;
             case MapModeTypes.Swipe: {
                 this._mapContainer.parentElement?.classList.add('mode-swipe');
@@ -418,7 +329,7 @@ export class WeeForestMap {
                 }
 
                 this._legend.updateLegendData(this.getDatasetId(), this._state.datasetYear!,this.getDatasetDataType(), this.getDatasetId(true), this._state.compareDatasetYear!);
-                this._legend.updateLegend([this._map.getBounds(), this._linkedMap!.getBounds()], this._state.features.filter(f => f.enabled));
+                this._legend.updateLegend([this._map.getBounds()!, this._linkedMap!.getBounds()!], this._state.features.filter(f => f.enabled));
                 this._compareContainer = new mapboxglCompare(this._map, this._linkedMap, this._mapContainer.parentElement || 'app-lens', {
                     // Set the initial position of the slider
                     position: 0.5
@@ -538,18 +449,29 @@ export class WeeForestMap {
     updateLegend(recalculate: boolean = true) {
         if (this._state.modeId === MapModeTypes.Swipe || this._state.modeId === MapModeTypes.Split) {
             this._legend.updateLegendData(this.getDatasetId(), this._state.datasetYear!, this.getDatasetDataType(), this.getDatasetId(true), this._state.compareDatasetYear!);
-            this._legend.updateLegend([this._map.getBounds(), this._linkedMap!.getBounds()], this._state.features.filter(f => f.enabled), recalculate);
+            this._legend.updateLegend([this._map.getBounds()!, this._linkedMap!.getBounds()!], this._state.features.filter(f => f.enabled), recalculate);
         }
         else {
             this._legend.updateLegendData(this.getDatasetId(), this._state.datasetYear!, this.getDatasetDataType());
-            this._legend.updateLegend([this._map.getBounds()], this._state.features.filter(f => f.enabled), recalculate);
+            this._legend.updateLegend([this._map.getBounds()!], this._state.features.filter(f => f.enabled), recalculate);
         }
     }
 
     updateCoordinateURL() {
-        const url = new URL(window.location.origin + window.location.pathname);
-        const query = `?c=${this._map.getCenter().lat.toFixed(6)},${this._map.getCenter().lng.toFixed(6)},${this._map.getZoom().toFixed(2)},${this._map.getPitch().toFixed(0)}&m=${this._state.modeId}&d=${this._state.datasetId}&t=${this._state.datasetDataTypeId}&b=${this._state.basemapId}&y=${this._state.datasetYear}&cy=${this._state.compareDatasetYear}`;
-        url.href = url.origin + url.pathname + url.search + url.hash + query;
+        const { query, url } = serializeLensUrl(new URL(window.location.href), {
+            coordinates: {
+                lat: this._map.getCenter().lat,
+                lng: this._map.getCenter().lng,
+                zoom: this._map.getZoom(),
+                pitch: this._map.getPitch(),
+            },
+            modeId: this._state.modeId,
+            datasetId: this._state.datasetId,
+            datasetDataTypeId: this._state.datasetDataTypeId,
+            basemapId: this._state.basemapId,
+            datasetYear: this._state.datasetYear,
+            compareDatasetYear: this._state.compareDatasetYear,
+        });
 
         try {
             window.history.replaceState(
@@ -631,7 +553,11 @@ export class WeeForestMap {
             this.handleMouseLeave(popup); 
         });
 
-        mainMap ? this._layer = layer : this._linkedLayer = layer;
+        if (mainMap) {
+            this._layer = layer;
+        } else {
+            this._linkedLayer = layer;
+        }
     }
 
     fadeLayer(map: mapboxgl.Map, layerId: string, duration: number = 1000) {
@@ -663,7 +589,7 @@ export class WeeForestMap {
     }
 
     // Mapbox handlers
-    handleClick(e: mapboxgl.MapMouseEvent & mapboxgl.EventData, popup: Popup) {
+    handleClick(e: mapboxgl.MapMouseEvent, popup: Popup) {
         // Check if there are features under the mouse pointer
         if (e.features && e.features.length > 0) {
             // Show the popup with the first feature
@@ -676,7 +602,7 @@ export class WeeForestMap {
         }
     }
 
-    handleMouseMove(e: mapboxgl.MapMouseEvent & mapboxgl.EventData, popup: Popup) {
+    handleMouseMove(e: mapboxgl.MapMouseEvent, popup: Popup) {
         // Check if there are features under the mouse pointer
         if (e.features && e.features.length > 0) {
             // Only show the popup in hover mode if it's not already in click mode

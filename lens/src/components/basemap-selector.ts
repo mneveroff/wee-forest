@@ -48,10 +48,10 @@ export class BaseMapSelector {
         render(html`
             <div class="widget-selector-header">
                 <div class="widget-selector-title">
-                    <span>Base Map</span>
+                    <label for="basemap-selector">Base Map</label>
                 </div>
                 <div class="widget-selector-dropdown">
-                    <select @change=${(e: Event) => this.onSelectChange(e)}>
+                    <select id="basemap-selector" @change=${(e: Event) => this.onSelectChange(e)}>
                         ${baseMapOptions}
                     </select>
                 </div>

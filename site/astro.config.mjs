@@ -9,6 +9,7 @@ import { buildRuntimeConfigScript } from '../lens/src/runtime-config.mjs';
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
+/** @param {string} filePath */
 function loadEnvFile(filePath) {
   try {
     for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
@@ -32,6 +33,7 @@ loadEnvFile(path.join(repoRoot, '.env'));
 const lensDevTarget = process.env.LENS_DEV_TARGET ?? 'http://127.0.0.1:3939';
 const posthogProxyPath = process.env.POSTHOG_PROXY_PATH || 'weef';
 
+/** @returns {import('vite').Plugin} */
 function runtimeConfigPlugin() {
   return {
     name: 'wee-forest-runtime-config',

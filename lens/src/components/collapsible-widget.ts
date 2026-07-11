@@ -1,4 +1,4 @@
-import { html, render } from 'lit-html';
+import { html } from 'lit-html';
 
 export class CollapsibleWidget {
     constructor(
@@ -7,16 +7,19 @@ export class CollapsibleWidget {
 
     }
 
-    toggleCollapse() {
+    toggleCollapse(button?: HTMLButtonElement) {
         this._isCollapsed = !this._isCollapsed;
         this._parent.classList.toggle('collapsed', this._isCollapsed);
+        button?.setAttribute('aria-label', this.getToggleLabel());
     }
 
     render() {
-        const svgIcon = this._isCollapsed ? 'expand_icon.svg' : 'collapse_icon.svg';
-
         return html`
-            <span class="icon widget-toggle-container" @click=${() => this.toggleCollapse()}></span>
+            <button type="button" class="icon widget-toggle-container" aria-label="${this.getToggleLabel()}" @click=${(event: Event) => this.toggleCollapse(event.currentTarget as HTMLButtonElement)}></button>
         `;
+    }
+
+    private getToggleLabel(): string {
+        return this._isCollapsed ? 'Expand panel' : 'Collapse panel';
     }
 }

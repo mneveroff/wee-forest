@@ -11,7 +11,16 @@ minimumReleaseAgeExclude:
   - astro
   - "@astrojs/*"
   - "@tailwindcss/*"
+  - "@oxlint/*"
+  - "@playwright/*"
+  - "@vitest/*"
+  - oxlint
+  - playwright
+  - playwright-core
   - tailwindcss
+  - typescript
+  - vite
+  - vitest
 
 allowBuilds:
   core-js: false

@@ -1,7 +1,7 @@
 {
   "name": "wee-forest",
   "private": true,
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": "24.x"
   },
@@ -9,12 +9,27 @@
     "dev": "concurrently \"pnpm dev:lens\" \"pnpm dev:site\"",
     "dev:lens": "pnpm --filter wee-forest-lens dev",
     "dev:site": "pnpm --filter @wee-forest/site dev",
+    "lint": "oxlint .",
+    "typecheck": "pnpm typecheck:lens && pnpm typecheck:site",
+    "typecheck:lens": "tsc --noEmit -p lens/tsconfig.json",
+    "typecheck:site": "pnpm --filter @wee-forest/site exec astro check",
+    "test": "vitest run",
+    "test:node": "vitest run --project node",
+    "test:browser": "vitest run --project browser",
+    "test:coverage": "vitest run --project node --coverage",
     "build": "pnpm -r build",
     "build:lens": "pnpm --filter wee-forest-lens build",
     "build:site": "pnpm --filter @wee-forest/site build",
+    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "docker:build:lens": "pnpm --filter wee-forest-lens docker:build"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "@vitest/browser-playwright": "4.1.10",
+    "@vitest/coverage-v8": "4.1.10",
+    "concurrently": "^9.2.1",
+    "oxlint": "1.73.0",
+    "playwright": "1.61.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   }
 }
