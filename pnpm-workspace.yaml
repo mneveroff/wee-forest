@@ -13,14 +13,20 @@ minimumReleaseAgeExclude:
   - "@tailwindcss/*"
   - "@oxlint/*"
   - "@playwright/*"
+  - "@types/react"
+  - "@types/react-dom"
   - "@vitest/*"
   - oxlint
   - playwright
   - playwright-core
+  - react
+  - react-dom
+  - react-map-gl
   - tailwindcss
   - typescript
   - vite
   - vitest
+  - zustand
 
 allowBuilds:
   core-js: false

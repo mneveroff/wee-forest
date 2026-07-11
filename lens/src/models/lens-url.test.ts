@@ -1,8 +1,7 @@
 import { expect, test } from 'vitest';
-import { BaseMapType } from '../components/basemap-selector';
-import { MapModeTypes } from '../components/mode-selector';
-import { DatasetDataTypes, DatasetTypes } from './dataset';
-import { defaultLensCoordinates, parseLensUrl, serializeLensUrl } from './lens-url';
+import { DatasetDataTypes, DatasetTypes } from '@/models/dataset';
+import { BaseMapType, MapModeTypes } from '@/models/lens-config';
+import { defaultLensCoordinates, parseLensUrl, serializeLensUrl } from '@/models/lens-url';
 
 test('uses the established Lens defaults when a shared view has no settings', () => {
     const parsed = parseLensUrl(new URL('https://weeforest.org/lens/'));

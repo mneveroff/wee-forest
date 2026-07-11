@@ -1,6 +1,5 @@
-import { BaseMapType } from '../components/basemap-selector';
-import { MapModeTypes } from '../components/mode-selector';
-import { DatasetDataTypes, DatasetTypes } from './dataset';
+import { DatasetDataTypes, DatasetTypes } from '@/models/dataset';
+import { BaseMapType, MapModeTypes } from '@/models/lens-config';
 
 export type LensCoordinates = {
     lat: number;

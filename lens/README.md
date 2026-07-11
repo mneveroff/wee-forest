@@ -2,11 +2,12 @@
 
 ## Overview
 
-The solution in it's current state is a simple, static file based web app utilising TypeScript with lit-html for front-end and express.js serving area information and tiles.
+The solution is a static TypeScript and React app with Express serving area information, runtime configuration, and tiles.
 
 Main external dependencies and used libraries include:
 
-- Mapbox and MapboxCompare for the map itself as well as the Swipe mode.
+- React Map GL and Mapbox GL for controlled Timeline, Split, and Swipe maps.
+- Zustand for Lens state and synchronized map view state.
 - tileserver-gl-light that's serving the .mbtiles files and is deployed as a standalone server, having requests to it routed via express.
 - duckdb in file mode used for area calculation, served via an express endpoint.
 
@@ -124,12 +125,4 @@ With regards to the Lens, there are a few areas where help would be greatly appr
 
 ## On File Structure
 
-I have opted in for a simplified file structure, foregoing some of the industry standard practices like single export per file and the likes, preferring to keep semantically related code within the same file wherever it was feasible and still read well.
-Ideally, with further growth of the project, the following changes would be made:
-
-- Separating out the Pages from page.ts into their own files, keeping the abstract separate.
-- Separate the dataset.ts and it's contents into descriptive files: enums, types, constants, etc.
-- Create a standalone folder for the Map State Manager.
-- I would separate abstract and reusable classes (Collapsible Widget, Page) into their own folder to ease the navigation and understanding of the codebase.
-
-Finally, I would add simple unit tests for selectors coupled with the Map State as well as integration tests for the Map State Manager.
+The client keeps configuration and state in `src/models`, React rendering in `src/components`, and the static informational page behavior in `page.ts`. Vitest uses separate Node and Browser projects: Node covers state and URL behavior, while Browser covers user-facing controls in Chromium.

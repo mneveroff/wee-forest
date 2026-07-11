@@ -32,23 +32,25 @@
     "@duckdb/node-api": "1.5.3-r.2",
     "dotenv": "^16.4.5",
     "esbuild": "^0.28.1",
-    "events": "^3.3.0",
     "express": "^4.22.0",
     "express-rate-limit": "^7.2.0",
     "http-proxy-middleware": "^2.0.9",
-    "lit": "^3.1.2",
-    "lit-html": "^3.1.2",
     "mapbox-gl": "^3.2.0",
-    "mapbox-gl-compare": "^0.4.1",
     "posthog-js": "^1.376.4",
     "posthog-node": "^5.35.6",
-    "tileserver-gl-light": "^5.6.0"
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-map-gl": "8.1.1",
+    "tileserver-gl-light": "^5.6.0",
+    "zustand": "5.0.14"
   },
   "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": "24.x"
   },
   "devDependencies": {
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
     "concurrently": "^9.2.1",
     "nodemon": "^3.1.14"
   }
