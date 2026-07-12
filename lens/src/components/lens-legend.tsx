@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { FeatureCharacteristic, type FeatureSetting } from '@/models/dataset';
 import { getDataset, getDatasetDataType, isComparisonMode } from '@/models/lens-store';
 import { CollapsiblePanel } from '@/components/lens-controls';
@@ -19,14 +20,25 @@ export function LensLegend({
     primaryBounds,
     comparisonBounds,
 }: LensLegendProps) {
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetId = useLensStore((state) => state.datasetId);
-    const datasetDataTypeId = useLensStore((state) => state.datasetDataTypeId);
-    const datasetYear = useLensStore((state) => state.datasetYear);
-    const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
-    const features = useLensStore((state) => state.features);
-    const toggleFeature = useLensStore((state) => state.toggleFeature);
-    const toggleAdvancedControls = useLensStore((state) => state.toggleAdvancedControls);
+    const {
+        modeId,
+        datasetId,
+        datasetDataTypeId,
+        datasetYear,
+        compareDatasetYear,
+        features,
+        toggleFeature,
+        toggleAdvancedControls,
+    } = useLensStore(useShallow((state) => ({
+        modeId: state.modeId,
+        datasetId: state.datasetId,
+        datasetDataTypeId: state.datasetDataTypeId,
+        datasetYear: state.datasetYear,
+        compareDatasetYear: state.compareDatasetYear,
+        features: state.features,
+        toggleFeature: state.toggleFeature,
+        toggleAdvancedControls: state.toggleAdvancedControls,
+    })));
     const comparisonMode = isComparisonMode(modeId);
     const dataset = getDataset(datasetId);
     const dataType = getDatasetDataType(dataset, datasetDataTypeId);
@@ -44,6 +56,7 @@ export function LensLegend({
         }
 
         const controller = new AbortController();
+        const fetchComparison = comparisonMode && Boolean(comparisonBounds);
         const timeout = window.setTimeout(async () => {
             setLoading(true);
             try {
@@ -56,7 +69,7 @@ export function LensLegend({
                         controller.signal,
                     ),
                 ];
-                if (comparisonMode && comparisonBounds) {
+                if (fetchComparison && comparisonBounds) {
                     requests.push(fetchAreaTotals(
                         areaServerPath,
                         `${dataset.datasetIdPrefix}${compareDatasetYear}`,
@@ -66,9 +79,14 @@ export function LensLegend({
                     ));
                 }
 
-                const [nextAreas, nextComparisonAreas = {}] = await Promise.all(requests);
+                const [nextAreas, nextComparisonAreas] = await Promise.all(requests);
+                // Keep prior totals until replacement arrives (stale-while-revalidate).
                 setAreas(nextAreas);
-                setComparisonAreas(nextComparisonAreas);
+                if (fetchComparison) {
+                    setComparisonAreas(nextComparisonAreas ?? {});
+                } else if (!comparisonMode) {
+                    setComparisonAreas({});
+                }
             } catch (error) {
                 if (!(error instanceof DOMException && error.name === 'AbortError')) {
                     console.error('updateLegend error:', error);

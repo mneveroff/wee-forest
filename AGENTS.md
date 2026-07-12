@@ -35,6 +35,13 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 - Express serves Lens at `/lens` (no `express.static` directory redirect) and 301s `/lens/` → `/lens`.
 - Lens `index.html` must use **root-absolute** asset URLs (`/lens/dist/...`, `/lens/runtime-config.js`). Relative `./dist/...` resolves to `/dist/...` when the page URL has no trailing slash.
 
+## Lens client state
+
+- **Zustand** holds Lens domain state (mode, dataset, years, view, features).
+- **React Context** only injects the store instance so tests/harness can mount an isolated store — not a second state tree.
+- **Local `useState`** for ephemeral UI (map bounds, swipe position) that must not live in the store or URL.
+- Multi-field object picks from the store should use Zustand `useShallow`. Do not split into slices for this app size.
+
 ## Production
 
 - **Single image** `wee-forest-lens`: Express serves Astro `site/dist` at `/` and Lens at `/lens*`. Caddy reverse-proxies everything to `:3939`.

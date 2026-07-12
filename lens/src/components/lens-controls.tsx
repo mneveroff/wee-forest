@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { DatasetConfigs } from '@/models/dataset';
 import { BaseMaps, MapModes, MapModeTypes } from '@/models/lens-config';
 import { getDataset, isComparisonMode } from '@/models/lens-store';
@@ -64,14 +65,25 @@ export function BaseMapSelector() {
 }
 
 export function ModeSelector() {
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetId = useLensStore((state) => state.datasetId);
-    const datasetYear = useLensStore((state) => state.datasetYear);
-    const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
-    const setMode = useLensStore((state) => state.setMode);
-    const setDatasetYear = useLensStore((state) => state.setDatasetYear);
-    const setCompareDatasetYear = useLensStore((state) => state.setCompareDatasetYear);
-    const swapYears = useLensStore((state) => state.swapYears);
+    const {
+        modeId,
+        datasetId,
+        datasetYear,
+        compareDatasetYear,
+        setMode,
+        setDatasetYear,
+        setCompareDatasetYear,
+        swapYears,
+    } = useLensStore(useShallow((state) => ({
+        modeId: state.modeId,
+        datasetId: state.datasetId,
+        datasetYear: state.datasetYear,
+        compareDatasetYear: state.compareDatasetYear,
+        setMode: state.setMode,
+        setDatasetYear: state.setDatasetYear,
+        setCompareDatasetYear: state.setCompareDatasetYear,
+        swapYears: state.swapYears,
+    })));
     const dataset = getDataset(datasetId);
     const years = Array.from(
         { length: dataset.endingYear - dataset.startingYear + 1 },
@@ -143,11 +155,19 @@ export function ModeSelector() {
 }
 
 export function DatasetSelector() {
-    const open = useLensStore((state) => state.advancedControlsOpen);
-    const datasetId = useLensStore((state) => state.datasetId);
-    const datasetDataTypeId = useLensStore((state) => state.datasetDataTypeId);
-    const setDataset = useLensStore((state) => state.setDataset);
-    const setDatasetDataType = useLensStore((state) => state.setDatasetDataType);
+    const {
+        open,
+        datasetId,
+        datasetDataTypeId,
+        setDataset,
+        setDatasetDataType,
+    } = useLensStore(useShallow((state) => ({
+        open: state.advancedControlsOpen,
+        datasetId: state.datasetId,
+        datasetDataTypeId: state.datasetDataTypeId,
+        setDataset: state.setDataset,
+        setDatasetDataType: state.setDatasetDataType,
+    })));
     const dataset = getDataset(datasetId);
 
     return (

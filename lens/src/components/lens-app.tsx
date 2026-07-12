@@ -1,22 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import type { WeeForestRuntimeConfig } from '@/client-config';
 import { BaseMapType, MapModeTypes } from '@/models/lens-config';
 import { isComparisonMode } from '@/models/lens-store';
-import { serializeLensUrl } from '@/models/lens-url';
 import { BaseMapSelector, DatasetSelector, ModeSelector } from '@/components/lens-controls';
 import { LensLegend, type MapBounds } from '@/components/lens-legend';
 import { LensMap } from '@/components/lens-map';
 import { useLensStore } from '@/components/lens-store-context';
+import { useLensUrlSync } from '@/hooks/use-lens-url-sync';
 
 type LensAppProps = {
     runtimeConfig: WeeForestRuntimeConfig;
 };
 
 export function LensApp({ runtimeConfig }: LensAppProps) {
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetYear = useLensStore((state) => state.datasetYear);
-    const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
-    const basemapId = useLensStore((state) => state.basemapId);
+    const { modeId, datasetYear, compareDatasetYear, basemapId } = useLensStore(useShallow((state) => ({
+        modeId: state.modeId,
+        datasetYear: state.datasetYear,
+        compareDatasetYear: state.compareDatasetYear,
+        basemapId: state.basemapId,
+    })));
+    // Ephemeral map UI — not Lens domain state and not URL-persisted.
     const [primaryBounds, setPrimaryBounds] = useState<MapBounds>();
     const [comparisonBounds, setComparisonBounds] = useState<MapBounds>();
     const [swipePosition, setSwipePosition] = useState(50);
@@ -92,54 +96,4 @@ export function LensApp({ runtimeConfig }: LensAppProps) {
             ) : null}
         </>
     );
-}
-
-function useLensUrlSync() {
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetId = useLensStore((state) => state.datasetId);
-    const datasetDataTypeId = useLensStore((state) => state.datasetDataTypeId);
-    const basemapId = useLensStore((state) => state.basemapId);
-    const datasetYear = useLensStore((state) => state.datasetYear);
-    const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
-    const viewState = useLensStore((state) => state.viewState);
-
-    useEffect(() => {
-        const timeout = window.setTimeout(() => {
-            const { query, url } = serializeLensUrl(new URL(window.location.href), {
-                coordinates: {
-                    lat: viewState.latitude,
-                    lng: viewState.longitude,
-                    zoom: viewState.zoom,
-                    pitch: viewState.pitch,
-                },
-                modeId,
-                datasetId,
-                datasetDataTypeId,
-                basemapId,
-                datasetYear,
-                compareDatasetYear,
-            });
-
-            try {
-                window.history.replaceState(null, '', query);
-            } catch (error) {
-                console.error('Failed to update the URL:', error);
-            }
-
-            const shareInput = document.getElementById('share-url');
-            if (shareInput instanceof HTMLInputElement) {
-                shareInput.value = url.toString();
-            }
-        }, 250);
-
-        return () => window.clearTimeout(timeout);
-    }, [
-        basemapId,
-        compareDatasetYear,
-        datasetDataTypeId,
-        datasetId,
-        datasetYear,
-        modeId,
-        viewState,
-    ]);
 }

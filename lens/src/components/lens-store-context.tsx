@@ -2,6 +2,11 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { useStore } from 'zustand';
 import type { LensStore, LensStoreApi } from '@/models/lens-store';
 
+/**
+ * Zustand holds Lens domain state. This Context only injects the store instance
+ * so tests/harness can mount an isolated store — it is not a second state tree.
+ * Ephemeral UI (map bounds, swipe position) stays in component useState.
+ */
 const LensStoreContext = createContext<LensStoreApi | null>(null);
 
 type LensStoreProviderProps = {
