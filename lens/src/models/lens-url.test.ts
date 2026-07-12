@@ -43,5 +43,5 @@ test('serializes a shareable view with stable precision and parameter names', ()
     });
 
     expect(query).toBe('?c=56.222668,-3.838931,9.94,25&m=tl&d=nao&t=o&b=l&y=2022&cy=2022');
-    expect(url.toString()).toBe(`https://weeforest.org/lens/${query}`);
+    expect(url.toString()).toBe(`https://weeforest.org/lens${query}`);
 });

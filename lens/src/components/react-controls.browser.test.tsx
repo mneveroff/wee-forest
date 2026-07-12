@@ -55,12 +55,14 @@ test('changes the dataset data type through named controls', async () => {
     root.unmount();
 });
 
-test('changes the base map and expands its compact panel', async () => {
+test('changes the base map and keeps the desktop panel expandable', async () => {
     const { root, store } = renderWithStore(<BaseMapSelector />);
 
     await userEvent.selectOptions(page.getByRole('combobox', { name: 'Base Map' }), BaseMapType.Satellite);
     expect(store.getState().basemapId).toBe(BaseMapType.Satellite);
 
+    await page.getByRole('button', { name: 'Collapse panel' }).click();
+    await expect.element(page.getByRole('button', { name: 'Expand panel' })).toBeInTheDocument();
     await page.getByRole('button', { name: 'Expand panel' }).click();
     await expect.element(page.getByRole('button', { name: 'Collapse panel' })).toBeInTheDocument();
     root.unmount();

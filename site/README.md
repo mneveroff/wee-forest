@@ -15,15 +15,15 @@ pnpm dev:lens   # terminal 1
 pnpm dev:site   # terminal 2
 ```
 
-Open `http://127.0.0.1:4321/` and use **Explore the Map** — it should load Lens at `/lens/` via the Astro dev proxy.
+Open `http://127.0.0.1:4321/` and use **Explore the Map** — it should load Lens at `/lens` via the Astro dev proxy.
 
 Set `TILE_SERVER_HOST=http://localhost:4321` in `lens/.env` so tile URLs work through the Astro proxy.
 
 Override the Lens upstream with `LENS_DEV_TARGET` if needed (default `http://127.0.0.1:3939`).
 
-PostHog and Mapbox tokens for local dev are read from `lens/.env` via `/runtime-config.js` (served by Astro dev for `/` and proxied to Lens for `/lens/`). Analytics events from both the landing page and Lens go through `/weef`, proxied to Lens in dev. A separate `site/.env` is optional — see `site/.env.example`.
+PostHog and Mapbox tokens for local dev are read from `lens/.env` via `/runtime-config.js` (served by Astro dev for `/` and proxied to Lens for `/lens`). Analytics events from both the landing page and Lens go through `/weef`, proxied to Lens in dev. A separate `site/.env` is optional — see `site/.env.example`.
 
-Note: the `/lens` proxy applies to `astro dev` only, not `astro preview` or the static `dist/` build. Lens area API calls use a trailing slash (`/lens/area/calculate_areas/`) so Astro's `trailingSlash: 'always'` dev server forwards them to Lens instead of returning a 404.
+Note: the `/lens` proxy applies to `astro dev` only, not `astro preview` or the static `dist/` build. Area API calls use `/lens/area/calculate_areas` (no trailing slash).
 
 ## Build
 

@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "start-tileserver": "tileserver-gl -c tileserver-config.json",
-    "dev:map-harness": "vite --config vite.map-harness.config.ts",
     "test:map-harness": "vitest run --config vitest.map-harness.config.ts",
+    "test:map-harness:headed": "VITEST_BROWSER_HEADED=1 vitest --config vitest.map-harness.config.ts",
+    "dev:map-harness": "vite --config vite.map-harness.config.ts",
     "watch-dev": "node build.dev.js",
     "serve-dev": "nodemon src/server.mjs",
     "dev": "concurrently \"pnpm run watch-dev\" \"pnpm run serve-dev\"",

@@ -177,7 +177,7 @@ async function fetchAreaTotals(
     bounds: MapBounds,
     signal: AbortSignal,
 ): Promise<AreaTotals> {
-    const url = new URL(`${areaServerPath}/calculate_areas/`, window.location.origin);
+    const url = new URL(`${areaServerPath}/calculate_areas`, window.location.origin);
     url.searchParams.set('dataset', datasetId);
     url.searchParams.set('type', dataType);
     url.searchParams.set('bounds', bounds.join(','));

@@ -57,7 +57,8 @@ export function parseLensUrl(url: URL): ParsedLensUrl {
 
 export function serializeLensUrl(baseUrl: URL, view: PersistedLensView): { query: string; url: URL } {
     const query = `?c=${view.coordinates.lat.toFixed(6)},${view.coordinates.lng.toFixed(6)},${view.coordinates.zoom.toFixed(2)},${view.coordinates.pitch.toFixed(0)}&m=${view.modeId}&d=${view.datasetId}&t=${view.datasetDataTypeId}&b=${view.basemapId}&y=${view.datasetYear}&cy=${view.compareDatasetYear}`;
-    const url = new URL(baseUrl.origin + baseUrl.pathname);
+    const pathname = baseUrl.pathname === '/' ? '/' : baseUrl.pathname.replace(/\/+$/, '');
+    const url = new URL(baseUrl.origin + pathname);
     url.search = query;
 
     return { query, url };

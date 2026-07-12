@@ -6,6 +6,9 @@ const alias = {
     '@': fileURLToPath(new URL('./lens/src', import.meta.url)),
 };
 
+const headed = process.env.VITEST_BROWSER_HEADED === '1' || process.env.VITEST_BROWSER_HEADED === 'true';
+const headless = !headed;
+
 export default defineConfig({
     resolve: {
         alias,
@@ -42,11 +45,19 @@ export default defineConfig({
                         'lens/src/**/*.browser.test.{ts,tsx}',
                         'site/src/**/*.browser.test.{ts,tsx}',
                     ],
+                    testTimeout: 30_000,
                     browser: {
                         enabled: true,
-                        headless: true,
-                        provider: playwright(),
-                        instances: [{ browser: 'chromium' }],
+                        headless,
+                        provider: playwright({
+                            launchOptions: headed
+                                ? { slowMo: Number(process.env.VITEST_BROWSER_SLOW_MO ?? 75) }
+                                : undefined,
+                        }),
+                        instances: [{
+                            browser: 'chromium',
+                            viewport: { width: 1024, height: 768 },
+                        }],
                     },
                 },
             },
