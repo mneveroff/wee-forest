@@ -12,7 +12,11 @@ export default defineConfig({
     define: {
         'import.meta.env.MAPBOX_TOKEN': JSON.stringify(process.env.MAPBOX_TOKEN ?? env.MAPBOX_TOKEN ?? ''),
     },
+    optimizeDeps: {
+        include: ['zustand/react/shallow'],
+    },
     resolve: {
+        dedupe: ['react', 'react-dom'],
         alias: {
             '@': fileURLToPath(new URL('./src', import.meta.url)),
         },

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { MapModeTypes } from '@/models/lens-config';
 import { isComparisonMode } from '@/models/lens-store';
 import { BaseMapSelector, ModeSelector } from '@/components/lens-controls';
@@ -13,9 +14,12 @@ type HarnessAppProps = {
 };
 
 export function HarnessApp({ mapboxToken, onMapIdle }: HarnessAppProps) {
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetYear = useLensStore((state) => state.datasetYear);
-    const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
+    const { modeId, datasetYear, compareDatasetYear } = useLensStore(useShallow((state) => ({
+        modeId: state.modeId,
+        datasetYear: state.datasetYear,
+        compareDatasetYear: state.compareDatasetYear,
+    })));
+
     const [swipePosition, setSwipePosition] = useState(50);
     const comparisonMode = isComparisonMode(modeId);
     const ignoreBounds = useCallback((_bounds: MapBounds) => undefined, []);

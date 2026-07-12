@@ -12,6 +12,10 @@ const headless = !headed;
 export default defineConfig({
     resolve: {
         alias,
+        dedupe: ['react', 'react-dom'],
+    },
+    optimizeDeps: {
+        include: ['zustand/react/shallow'],
     },
     test: {
         coverage: {
@@ -27,6 +31,7 @@ export default defineConfig({
             {
                 resolve: {
                     alias,
+                    dedupe: ['react', 'react-dom'],
                 },
                 test: {
                     name: 'node',
@@ -38,6 +43,10 @@ export default defineConfig({
             {
                 resolve: {
                     alias,
+                    dedupe: ['react', 'react-dom'],
+                },
+                optimizeDeps: {
+                    include: ['zustand/react/shallow'],
                 },
                 test: {
                     name: 'browser',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import ReactMap, {
     AttributionControl,
     Layer,
@@ -18,6 +19,7 @@ import type {
 import { ExtendedDatasetDataTypes } from '@/models/dataset';
 import { BaseMaps, BaseMapType } from '@/models/lens-config';
 import { getDataset, getDatasetDataType } from '@/models/lens-store';
+import { lensOverlaySourceId } from '@/models/lens-overlay-source';
 import { useLensStore } from '@/components/lens-store-context';
 import type { MapBounds } from '@/components/lens-legend';
 
@@ -65,27 +67,48 @@ export function LensMap({
     year,
 }: LensMapProps) {
     const mapRef = useRef<MapRef>(null);
-    const modeId = useLensStore((state) => state.modeId);
-    const datasetId = useLensStore((state) => state.datasetId);
-    const datasetDataTypeId = useLensStore((state) => state.datasetDataTypeId);
-    const basemapId = useLensStore((state) => state.basemapId);
-    const features = useLensStore((state) => state.features);
-    const viewState = useLensStore((state) => state.viewState);
-    const setViewState = useLensStore((state) => state.setViewState);
+    const {
+        modeId,
+        datasetId,
+        datasetDataTypeId,
+        basemapId,
+        features,
+        viewState,
+        setViewState,
+    } = useLensStore(useShallow((state) => ({
+        modeId: state.modeId,
+        datasetId: state.datasetId,
+        datasetDataTypeId: state.datasetDataTypeId,
+        basemapId: state.basemapId,
+        features: state.features,
+        viewState: state.viewState,
+        setViewState: state.setViewState,
+    })));
     const dataset = getDataset(datasetId);
     const dataType = getDatasetDataType(dataset, datasetDataTypeId);
-    const sourceId = `${dataset.id}_${year}_${mapRole}`;
+    const sourceId = lensOverlaySourceId(dataset.id, mapRole);
     const layerId = `${sourceId}_fill`;
+    const pendingSourceId = `${sourceId}_pending`;
     const [popup, setPopup] = useState<PopupState | null>(null);
     const [mapIdle, setMapIdle] = useState(false);
     const mapStyle = mapStyleOverride
         ?? BaseMaps.find((basemap) => basemap.id === basemapId)?.style
         ?? BaseMapType.Fallback;
-    const source: LensMapSource = mapSource ?? {
+    const desiredSource: LensMapSource = mapSource ?? {
         type: 'vector',
         sourceLayer: dataset.datasetLayerId,
         url: `${tileServerPath}/data/${dataset.datasetIdPrefix}${year}.json`,
     };
+    const desiredSourceKey = lensMapSourceKey(desiredSource);
+    const [visibleSource, setVisibleSource] = useState(desiredSource);
+    const [pendingSource, setPendingSource] = useState<LensMapSource | null>(null);
+    const visibleSourceKey = lensMapSourceKey(visibleSource);
+    const desiredSourceRef = useRef(desiredSource);
+    const visibleSourceRef = useRef(visibleSource);
+    const pendingSourceRef = useRef(pendingSource);
+    desiredSourceRef.current = desiredSource;
+    visibleSourceRef.current = visibleSource;
+    pendingSourceRef.current = pendingSource;
     const fillColor = useMemo(() => [
         'match',
         ['get', dataType.value],
@@ -149,14 +172,65 @@ export function LensMap({
     }, [modeId]);
 
     useEffect(() => {
+        if (desiredSourceKey === visibleSourceKey) {
+            setPendingSource(null);
+            return;
+        }
+
+        const desired = desiredSourceRef.current;
+        const visible = visibleSourceRef.current;
+
+        // Dataset / source-layer identity changed — swap immediately.
+        if (!sameSourceIdentity(desired, visible)) {
+            setVisibleSource(desired);
+            setPendingSource(null);
+            setMapIdle(false);
+            setPopup(null);
+            return;
+        }
+
+        // Year / tile URL change — keep the painted layer until the replacement is loaded.
+        setPendingSource(desired);
+        setPopup(null);
+    }, [desiredSourceKey, visibleSourceKey]);
+
+    useEffect(() => {
         setMapIdle(false);
         setPopup(null);
-    }, [mapStyle, sourceId]);
+    }, [mapStyle]);
+
+    const promotePendingIfReady = useCallback(() => {
+        const pending = pendingSourceRef.current;
+        if (!pending) {
+            return;
+        }
+
+        const map = mapRef.current?.getMap();
+        if (!map?.getSource(pendingSourceId) || !map.isSourceLoaded(pendingSourceId)) {
+            return;
+        }
+
+        setVisibleSource(pending);
+        setPendingSource(null);
+    }, [pendingSourceId]);
 
     const handleIdle = useCallback(() => {
+        promotePendingIfReady();
         setMapIdle(true);
         onIdle?.();
-    }, [onIdle]);
+    }, [onIdle, promotePendingIfReady]);
+
+    useEffect(() => {
+        if (!pendingSource) {
+            return;
+        }
+
+        // GeoJSON (and already-cached vector) can be ready before the next idle.
+        const frame = window.requestAnimationFrame(() => {
+            promotePendingIfReady();
+        });
+        return () => window.cancelAnimationFrame(frame);
+    }, [pendingSource, promotePendingIfReady]);
 
     return (
         <div
@@ -190,26 +264,26 @@ export function LensMap({
                 style={{ height: '100%', width: '100%' }}
             >
                 <AttributionControl compact={window.innerWidth <= 1340} />
-                {source.type === 'vector' ? (
-                    <Source key={sourceId} id={sourceId} type="vector" url={source.url}>
-                        <Layer
-                            id={layerId}
-                            type="fill"
-                            source-layer={source.sourceLayer}
-                            filter={filter}
-                            paint={fillPaint}
-                        />
-                    </Source>
-                ) : (
-                    <Source key={sourceId} id={sourceId} type="geojson" data={source.data}>
-                        <Layer
-                            id={layerId}
-                            type="fill"
-                            filter={filter}
-                            paint={fillPaint}
-                        />
-                    </Source>
-                )}
+                <LensMapSourceLayers
+                    fillPaint={fillPaint}
+                    filter={filter}
+                    layerId={layerId}
+                    source={visibleSource}
+                    sourceId={sourceId}
+                />
+                {pendingSource ? (
+                    <LensMapSourceLayers
+                        fillPaint={{
+                            ...fillPaint,
+                            'fill-opacity': 0,
+                            'fill-opacity-transition': { duration: 0 },
+                        }}
+                        filter={filter}
+                        layerId={`${layerId}_pending`}
+                        source={pendingSource}
+                        sourceId={pendingSourceId}
+                    />
+                ) : null}
                 {popup && mapIdle ? (
                     <ReactMapPopup
                         className="wee-map-popup"
@@ -227,6 +301,66 @@ export function LensMap({
             </ReactMap>
         </div>
     );
+}
+
+function LensMapSourceLayers({
+    fillPaint,
+    filter,
+    layerId,
+    source,
+    sourceId,
+}: {
+    fillPaint: {
+        'fill-color': ExpressionSpecification;
+        'fill-opacity': number;
+        'fill-opacity-transition': { duration: number };
+    };
+    filter: FilterSpecification | undefined;
+    layerId: string;
+    source: LensMapSource;
+    sourceId: string;
+}) {
+    if (source.type === 'vector') {
+        return (
+            <Source id={sourceId} type="vector" url={source.url}>
+                <Layer
+                    id={layerId}
+                    type="fill"
+                    source-layer={source.sourceLayer}
+                    filter={filter}
+                    paint={fillPaint}
+                />
+            </Source>
+        );
+    }
+
+    return (
+        <Source id={sourceId} type="geojson" data={source.data}>
+            <Layer
+                id={layerId}
+                type="fill"
+                filter={filter}
+                paint={fillPaint}
+            />
+        </Source>
+    );
+}
+
+function lensMapSourceKey(source: LensMapSource): string {
+    if (source.type === 'vector') {
+        return `vector:${source.sourceLayer}:${source.url}`;
+    }
+    return `geojson:${JSON.stringify(source.data)}`;
+}
+
+function sameSourceIdentity(left: LensMapSource, right: LensMapSource): boolean {
+    if (left.type !== right.type) {
+        return false;
+    }
+    if (left.type === 'vector' && right.type === 'vector') {
+        return left.sourceLayer === right.sourceLayer;
+    }
+    return true;
 }
 
 const datasetTypePropertyKeys = new Set<string>(Object.values(ExtendedDatasetDataTypes));
