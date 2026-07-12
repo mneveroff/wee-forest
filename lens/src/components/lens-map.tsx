@@ -92,6 +92,11 @@ export function LensMap({
         ...features.flatMap((feature) => [feature.value, feature.color]),
         '#000',
     ] as ExpressionSpecification, [dataType.value, features]);
+    const fillPaint = useMemo(() => ({
+        'fill-color': fillColor,
+        'fill-opacity': 0.5,
+        'fill-opacity-transition': { duration: 1000 },
+    }), [fillColor]);
     const filter = useMemo(() => {
         const hiddenFeatures = features
             .filter((feature) => feature.toggled || !feature.enabled)
@@ -192,11 +197,7 @@ export function LensMap({
                             type="fill"
                             source-layer={source.sourceLayer}
                             filter={filter}
-                            paint={{
-                                'fill-color': fillColor,
-                                'fill-opacity': 0.5,
-                                'fill-opacity-transition': { duration: 1000 },
-                            }}
+                            paint={fillPaint}
                         />
                     </Source>
                 ) : (
@@ -205,11 +206,7 @@ export function LensMap({
                             id={layerId}
                             type="fill"
                             filter={filter}
-                            paint={{
-                                'fill-color': fillColor,
-                                'fill-opacity': 0.5,
-                                'fill-opacity-transition': { duration: 1000 },
-                            }}
+                            paint={fillPaint}
                         />
                     </Source>
                 )}
@@ -232,12 +229,14 @@ export function LensMap({
     );
 }
 
+const datasetTypePropertyKeys = new Set<string>(Object.values(ExtendedDatasetDataTypes));
+
 function PopupContent({ popup, zoom }: { popup: PopupState; zoom: number }) {
     const properties = popup.feature.properties ?? {};
     const area = Number(properties.area_ha ?? 0);
     const altitude = getAltitude(zoom);
     const googleMapsUrl = `https://www.google.com/maps/@${popup.latitude},${popup.longitude},${altitude}m/data=!3m1!1e3`;
-    const rows = Object.entries(properties).slice(1, -1);
+    const rows = Object.entries(properties).filter(([key]) => datasetTypePropertyKeys.has(key));
 
     return (
         <div>

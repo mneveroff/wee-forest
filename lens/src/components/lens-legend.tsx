@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FeatureCharacteristic, type FeatureSetting } from '@/models/dataset';
-import { MapModeTypes } from '@/models/lens-config';
-import { getDataset, getDatasetDataType } from '@/models/lens-store';
+import { getDataset, getDatasetDataType, isComparisonMode } from '@/models/lens-store';
 import { CollapsiblePanel } from '@/components/lens-controls';
 import { useLensStore } from '@/components/lens-store-context';
 
@@ -28,7 +27,7 @@ export function LensLegend({
     const features = useLensStore((state) => state.features);
     const toggleFeature = useLensStore((state) => state.toggleFeature);
     const toggleAdvancedControls = useLensStore((state) => state.toggleAdvancedControls);
-    const comparisonMode = modeId === MapModeTypes.Split || modeId === MapModeTypes.Swipe;
+    const comparisonMode = isComparisonMode(modeId);
     const dataset = getDataset(datasetId);
     const dataType = getDatasetDataType(dataset, datasetDataTypeId);
     const [areas, setAreas] = useState<AreaTotals>({});

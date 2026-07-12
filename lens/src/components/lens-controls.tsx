@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { DatasetConfigs } from '@/models/dataset';
 import { BaseMaps, MapModes, MapModeTypes } from '@/models/lens-config';
-import { getDataset } from '@/models/lens-store';
+import { getDataset, isComparisonMode } from '@/models/lens-store';
 import { useLensStore } from '@/components/lens-store-context';
 
 type CollapsiblePanelProps = {
@@ -77,7 +77,7 @@ export function ModeSelector() {
         { length: dataset.endingYear - dataset.startingYear + 1 },
         (_, index) => dataset.startingYear + index,
     );
-    const comparisonMode = modeId === MapModeTypes.Split || modeId === MapModeTypes.Swipe;
+    const comparisonMode = isComparisonMode(modeId);
 
     return (
         <CollapsiblePanel

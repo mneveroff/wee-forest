@@ -1,28 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { StyleSpecification } from 'mapbox-gl';
 import type { WeeForestRuntimeConfig } from '@/client-config';
 import { BaseMapType, MapModeTypes } from '@/models/lens-config';
+import { isComparisonMode } from '@/models/lens-store';
 import { serializeLensUrl } from '@/models/lens-url';
 import { BaseMapSelector, DatasetSelector, ModeSelector } from '@/components/lens-controls';
 import { LensLegend, type MapBounds } from '@/components/lens-legend';
-import { LensMap, type LensMapSource } from '@/components/lens-map';
+import { LensMap } from '@/components/lens-map';
 import { useLensStore } from '@/components/lens-store-context';
 
 type LensAppProps = {
-    mapSourceFactory?: (year: number, role: 'primary' | 'comparison') => LensMapSource;
-    mapStyleOverride?: StyleSpecification;
-    onMapIdle?: (role: 'primary' | 'comparison') => void;
     runtimeConfig: WeeForestRuntimeConfig;
-    showLegend?: boolean;
 };
 
-export function LensApp({
-    mapSourceFactory,
-    mapStyleOverride,
-    onMapIdle,
-    runtimeConfig,
-    showLegend = true,
-}: LensAppProps) {
+export function LensApp({ runtimeConfig }: LensAppProps) {
     const modeId = useLensStore((state) => state.modeId);
     const datasetYear = useLensStore((state) => state.datasetYear);
     const compareDatasetYear = useLensStore((state) => state.compareDatasetYear);
@@ -30,14 +20,12 @@ export function LensApp({
     const [primaryBounds, setPrimaryBounds] = useState<MapBounds>();
     const [comparisonBounds, setComparisonBounds] = useState<MapBounds>();
     const [swipePosition, setSwipePosition] = useState(50);
-    const comparisonMode = modeId === MapModeTypes.Split || modeId === MapModeTypes.Swipe;
+    const comparisonMode = isComparisonMode(modeId);
     const mapboxToken = runtimeConfig.mapboxToken ?? '';
     const tileServerPath = runtimeConfig.tileServerPath ?? '/lens/tiles';
     const areaServerPath = runtimeConfig.areaServerPath ?? '/lens/area';
     const setPrimaryMapBounds = useCallback((bounds: MapBounds) => setPrimaryBounds(bounds), []);
     const setComparisonMapBounds = useCallback((bounds: MapBounds) => setComparisonBounds(bounds), []);
-    const notifyPrimaryIdle = useCallback(() => onMapIdle?.('primary'), [onMapIdle]);
-    const notifyComparisonIdle = useCallback(() => onMapIdle?.('comparison'), [onMapIdle]);
 
     useLensUrlSync();
 
@@ -60,13 +48,11 @@ export function LensApp({
     return (
         <>
             <div className="widget-container right-widget-container">
-                {showLegend ? (
-                    <LensLegend
-                        areaServerPath={areaServerPath}
-                        primaryBounds={primaryBounds}
-                        comparisonBounds={comparisonBounds}
-                    />
-                ) : null}
+                <LensLegend
+                    areaServerPath={areaServerPath}
+                    primaryBounds={primaryBounds}
+                    comparisonBounds={comparisonBounds}
+                />
                 <DatasetSelector />
             </div>
             <div className="widget-container left-widget-container">
@@ -76,10 +62,7 @@ export function LensApp({
             <LensMap
                 mapboxToken={mapboxToken}
                 mapRole="primary"
-                mapSource={mapSourceFactory?.(datasetYear, 'primary')}
-                mapStyleOverride={mapStyleOverride}
                 onBoundsChange={setPrimaryMapBounds}
-                onIdle={notifyPrimaryIdle}
                 tileServerPath={tileServerPath}
                 year={datasetYear}
             />
@@ -88,10 +71,7 @@ export function LensApp({
                     clipLeft={modeId === MapModeTypes.Swipe ? swipePosition : undefined}
                     mapboxToken={mapboxToken}
                     mapRole="comparison"
-                    mapSource={mapSourceFactory?.(compareDatasetYear, 'comparison')}
-                    mapStyleOverride={mapStyleOverride}
                     onBoundsChange={setComparisonMapBounds}
-                    onIdle={notifyComparisonIdle}
                     tileServerPath={tileServerPath}
                     year={compareDatasetYear}
                 />

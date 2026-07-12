@@ -40,7 +40,7 @@ test('separates equal years when comparison mode is selected', () => {
     expect(store.getState().compareDatasetYear).toBe(2022);
 });
 
-test('replaces feature settings with the selected data type and toggles them immutably', () => {
+test('replaces feature settings with the selected data type and toggles them without mutating prior state', () => {
     const store = createStore();
     const previousFeatures = store.getState().features;
 
@@ -50,9 +50,9 @@ test('replaces feature settings with the selected data type and toggles them imm
     store.getState().toggleFeature(feature.value);
 
     expect(store.getState().datasetDataTypeId).toBe(DatasetDataTypes.Source);
-    expect(sourceFeatures).not.toBe(previousFeatures);
-    expect(store.getState().features).not.toBe(sourceFeatures);
-    expect(store.getState().features[0].toggled).toBe(true);
+    expect(sourceFeatures.map((entry) => entry.value)).not.toEqual(previousFeatures.map((entry) => entry.value));
+    expect(sourceFeatures.find((entry) => entry.value === feature.value)?.toggled).toBe(false);
+    expect(store.getState().features.find((entry) => entry.value === feature.value)?.toggled).toBe(true);
 });
 
 test('keeps unavailable modes out and accepts a complete controlled camera update', () => {

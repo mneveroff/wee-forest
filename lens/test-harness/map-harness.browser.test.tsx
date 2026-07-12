@@ -6,11 +6,10 @@ import '@/assets/map.css';
 import { createRoot, type Root } from 'react-dom/client';
 import { expect, test } from 'vitest';
 import { page } from 'vitest/browser';
-import { LensApp } from '@/components/lens-app';
 import { LensStoreProvider } from '@/components/lens-store-context';
 import { createLensStore } from '@/models/lens-store';
 import { parseLensUrl } from '@/models/lens-url';
-import { fixtureMapStyle, fixtureSourceFactory } from './fixture-data';
+import { HarnessApp } from './harness-app';
 
 const mapboxToken = import.meta.env.MAPBOX_TOKEN;
 
@@ -30,13 +29,7 @@ function renderHarness(onMapIdle?: (role: 'primary' | 'comparison') => void): Ro
     const root = createRoot(container);
     root.render(
         <LensStoreProvider store={store}>
-            <LensApp
-                mapSourceFactory={fixtureSourceFactory}
-                mapStyleOverride={fixtureMapStyle}
-                onMapIdle={onMapIdle}
-                runtimeConfig={{ mapboxToken }}
-                showLegend={false}
-            />
+            <HarnessApp mapboxToken={mapboxToken} onMapIdle={onMapIdle} />
         </LensStoreProvider>,
     );
     return root;
@@ -55,12 +48,12 @@ test('opens a popup from a fixture rectangle after changing Timeline year', asyn
     await page.getByRole('slider', { name: 'Dataset year' }).fill('2015');
     await changedYearIdle;
 
-    const canvas = document.querySelector('.mapboxgl-canvas');
-    if (!(canvas instanceof HTMLCanvasElement)) {
-        throw new Error('Map canvas did not render');
+    const map = document.getElementById('map-main');
+    if (!(map instanceof HTMLElement)) {
+        throw new Error('Primary map did not render');
     }
-    const bounds = canvas.getBoundingClientRect();
-    await page.elementLocator(canvas).click({
+    const bounds = map.getBoundingClientRect();
+    await page.elementLocator(map).click({
         position: {
             x: bounds.width / 2,
             y: bounds.height / 2,
@@ -85,15 +78,23 @@ function createIdleTracker() {
 test('expands both maps from Split geometry before applying Swipe clipping', async () => {
     const root = renderHarness();
     await page.getByRole('button', { name: 'Split' }).click();
-    await expect.poll(() => document.querySelectorAll('.mapboxgl-canvas').length).toBe(2);
+    await expect.poll(() => {
+        return Boolean(document.getElementById('map-main') && document.getElementById('map-compare'));
+    }).toBe(true);
 
     await page.getByRole('button', { name: 'Swipe' }).click();
     await expect.element(page.getByRole('slider', { name: 'Comparison position' })).toBeInTheDocument();
     await expect.poll(() => {
         const rootWidth = document.getElementById('app-lens')?.getBoundingClientRect().width ?? 0;
-        const canvasWidths = [...document.querySelectorAll<HTMLCanvasElement>('.mapboxgl-canvas')]
-            .map((canvas) => canvas.getBoundingClientRect().width);
-        return canvasWidths.length === 2 && canvasWidths.every((width) => width >= rootWidth * 0.95);
+        const primary = document.getElementById('map-main')?.getBoundingClientRect().width ?? 0;
+        const comparison = document.getElementById('map-compare');
+        const comparisonWidth = comparison?.getBoundingClientRect().width ?? 0;
+        const clipPath = comparison instanceof HTMLElement
+            ? comparison.style.clipPath || getComputedStyle(comparison).clipPath
+            : '';
+        return primary >= rootWidth * 0.95
+            && comparisonWidth >= rootWidth * 0.95
+            && clipPath.includes('inset');
     }).toBe(true);
     root.unmount();
 });

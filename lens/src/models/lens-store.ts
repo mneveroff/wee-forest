@@ -160,6 +160,6 @@ function createFeatureSettings(dataType: DatasetDataType): FeatureSetting[] {
     }));
 }
 
-function isComparisonMode(modeId: MapModeTypes): boolean {
+export function isComparisonMode(modeId: MapModeTypes): boolean {
     return modeId === MapModeTypes.Split || modeId === MapModeTypes.Swipe;
 }
