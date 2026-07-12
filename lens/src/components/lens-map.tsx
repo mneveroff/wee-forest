@@ -145,6 +145,7 @@ export function LensMap({
 
     useEffect(() => {
         setMapIdle(false);
+        setPopup(null);
     }, [mapStyle, sourceId]);
 
     const handleIdle = useCallback(() => {

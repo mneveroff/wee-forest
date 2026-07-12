@@ -9,7 +9,7 @@ export const fixtureMapStyle: StyleSpecification = {
             id: 'ocean',
             type: 'background',
             paint: {
-                'background-color': '#b8dce8',
+                'background-color': '#0f3a4a',
             },
         },
     ],
