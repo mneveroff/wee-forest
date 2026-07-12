@@ -16,7 +16,7 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
     "@tailwindcss/vite": "^4.3.0",
-    "astro": "^6.4.4",
+    "astro": "^6.4.6",
     "plotly.js-dist-min": "^3.5.1",
     "posthog-js": "^1.376.4",
     "tailwindcss": "^4.3.0"
