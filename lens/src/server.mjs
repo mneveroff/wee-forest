@@ -289,17 +289,17 @@ if (staticServerSegment) {
             next();
             return;
         }
-        if (req.path === lensPath) {
+        if (req.path === `${lensPath}/`) {
             const search = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '';
             if (!search || isLensTrackingQuery(req.query)) {
-                res.redirect(301, `${lensPath}/`);
+                res.redirect(301, lensPath);
                 return;
             }
-            res.redirect(301, `${lensPath}/${search}`);
+            res.redirect(301, `${lensPath}${search}`);
             return;
         }
-        if (req.path === `${lensPath}/` && isLensTrackingQuery(req.query)) {
-            res.redirect(301, `${lensPath}/`);
+        if (req.path === lensPath && isLensTrackingQuery(req.query)) {
+            res.redirect(301, lensPath);
             return;
         }
         next();
@@ -314,7 +314,25 @@ if (fs.existsSync(robotsTxtPath)) {
     });
 }
 
-app.use('/' + staticServerPath, limiter, express.static(path.join(__dirname, process.env.STATIC_DIR || 'public')));
+const staticRoot = path.join(__dirname, process.env.STATIC_DIR || 'public');
+const lensMount = staticServerSegment ? `/${staticServerSegment}` : null;
+
+if (lensMount) {
+    // Serve index at /lens without express.static's /lens → /lens/ directory redirect.
+    app.get(lensMount, limiter, (req, res, next) => {
+        res.sendFile(path.join(staticRoot, 'index.html'), (err) => {
+            if (err) {
+                next(err);
+            }
+        });
+    });
+    app.use(lensMount, limiter, express.static(staticRoot, {
+        redirect: false,
+        index: false,
+    }));
+} else {
+    app.use(limiter, express.static(staticRoot, { redirect: false }));
+}
 
 if (fs.existsSync(siteDistPath)) {
     app.use(limiter, express.static(siteDistPath, { index: 'index.html', extensions: ['html'] }));

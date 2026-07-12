@@ -28,10 +28,12 @@ Short caveats not obvious from file layout alone. See `docker/README.md`, `site/
 - Shared first-party PostHog proxy at **`/weef`** (both site and Lens). Legacy **`/lens/weef`** still proxied.
 - Server-side events use `POSTHOG_API_KEY` in `lens/.env` / `docker/.env` (not the public key).
 
-## Astro trailing-slash trap
+## Trailing slashes
 
-- `site/astro.config.mjs` sets **`trailingSlash: 'always'`**.
-- In dev, extensionless paths like `/lens/area/calculate_areas` (no trailing slash) hit **Astro 404**, not the Lens proxy. Area API calls must use **`/lens/area/calculate_areas/`** before query params. See `lens/src/components/legend.ts`.
+- Prefer **no** trailing slashes in links and APIs: Lens share URLs, CTAs (`/lens`), area API at `/lens/area/calculate_areas`.
+- Astro uses `trailingSlash: 'ignore'` so `/lens/` is not 404'd in `astro dev` before the Vite proxy.
+- Express serves Lens at `/lens` (no `express.static` directory redirect) and 301s `/lens/` → `/lens`.
+- Lens `index.html` must use **root-absolute** asset URLs (`/lens/dist/...`, `/lens/runtime-config.js`). Relative `./dist/...` resolves to `/dist/...` when the page URL has no trailing slash.
 
 ## Production
 

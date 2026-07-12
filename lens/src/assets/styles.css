@@ -13,16 +13,6 @@ body {
     --elevation-100-left: -4px 4px 6px -2px rgba(26, 26, 26, 0.20);
 }
 
-.no-select * {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
-    /* pointer-events: none; ?? */
-}
-
 .surface {
     position: relative; 
 

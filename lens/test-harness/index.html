@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>PROTOTYPE — Lens map harness</title>
+        <style>
+            .fixture-banner {
+                position: fixed;
+                z-index: 100;
+                top: 8px;
+                left: 50%;
+                padding: 6px 10px;
+                border-radius: 4px;
+                transform: translateX(-50%);
+                color: #fff;
+                background: #7f1d1d;
+                font: 600 12px/1.2 sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app-lens" class="map-container"></div>
+        <div class="fixture-banner">TEST ONLY · local GeoJSON rectangles · never production data</div>
+        <script type="module" src="./src.tsx"></script>
+    </body>
+</html>

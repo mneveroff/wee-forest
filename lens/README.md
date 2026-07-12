@@ -2,11 +2,12 @@
 
 ## Overview
 
-The solution in it's current state is a simple, static file based web app utilising TypeScript with lit-html for front-end and express.js serving area information and tiles.
+The solution is a static TypeScript and React app with Express serving area information, runtime configuration, and tiles.
 
 Main external dependencies and used libraries include:
 
-- Mapbox and MapboxCompare for the map itself as well as the Swipe mode.
+- React Map GL and Mapbox GL for controlled Timeline, Split, and Swipe maps.
+- Zustand for Lens state and synchronized map view state.
 - tileserver-gl-light that's serving the .mbtiles files and is deployed as a standalone server, having requests to it routed via express.
 - duckdb in file mode used for area calculation, served via an express endpoint.
 
@@ -51,6 +52,10 @@ Browser-facing values (`MAPBOX_TOKEN`, `POSTHOG_PUBLIC_API_KEY`, path prefixes) 
 1. Check out the repository in a local folder
 1. Complete data preparation, resulting in 23 mbtiles and 23 parquet files, 11 per each year for NFI and NFIxAWI overlay and 1 for AWI only.
 1. From the repo root, run `pnpm dev:lens` to start the development server. It watches for changes and supports hot reload for everything but environment variables, has source mapping and starts the tileserver as you would on production.
+
+For map interaction and comparison-mode debugging, run `pnpm dev:map-harness` and open `http://127.0.0.1:4174/`. The harness reads `MAPBOX_TOKEN` from `lens/.env`, but all rendered map data is local GeoJSON made of obvious rectangles over a plain ocean background. Run its Browser suite with `pnpm test:map-harness` (headless in CI) or `pnpm test:map-harness:headed` to watch Chromium with slowed interactions. Control-only Browser tests (`pnpm test:browser`) are intentionally map-free and finish quickly; use the harness when you need a real Mapbox GL paint/hit-test environment. The harness is outside the production entry graph and is not included in Lens builds.
+
+Do not use Mapbox `testMode` for harness or visual Browser tests — it silences token errors but disables canvas painting, so popup hit-testing fails. Keep a real `MAPBOX_TOKEN` even when tile data is local.
 
 If you're using VSCode you should also find `dev` and `prod` configurations in the `.vscode/launch.json` file, allowing you to attach the debugger to the browser directly.
 
@@ -124,12 +129,4 @@ With regards to the Lens, there are a few areas where help would be greatly appr
 
 ## On File Structure
 
-I have opted in for a simplified file structure, foregoing some of the industry standard practices like single export per file and the likes, preferring to keep semantically related code within the same file wherever it was feasible and still read well.
-Ideally, with further growth of the project, the following changes would be made:
-
-- Separating out the Pages from page.ts into their own files, keeping the abstract separate.
-- Separate the dataset.ts and it's contents into descriptive files: enums, types, constants, etc.
-- Create a standalone folder for the Map State Manager.
-- I would separate abstract and reusable classes (Collapsible Widget, Page) into their own folder to ease the navigation and understanding of the codebase.
-
-Finally, I would add simple unit tests for selectors coupled with the Map State as well as integration tests for the Map State Manager.
+The client keeps configuration and state in `src/models`, React rendering in `src/components`, and the static informational page behavior in `page.ts`. Vitest uses separate Node and Browser projects: Node covers state and URL behavior, while Browser covers user-facing controls in Chromium.

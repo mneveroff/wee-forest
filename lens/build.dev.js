@@ -1,8 +1,14 @@
 import esbuild from 'esbuild';
+import { fileURLToPath } from 'node:url';
+
+const srcPath = fileURLToPath(new URL('./src', import.meta.url));
 
 async function run() {
   let ctx = await esbuild.context({
-    entryPoints: ['./src/index.ts'],
+    entryPoints: ['./src/index.tsx'],
+    alias: {
+      '@': srcPath,
+    },
     bundle: true,
     sourcemap: true,
     format: 'esm',

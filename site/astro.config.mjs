@@ -9,6 +9,7 @@ import { buildRuntimeConfigScript } from '../lens/src/runtime-config.mjs';
 
 const repoRoot = path.dirname(fileURLToPath(import.meta.url));
 
+/** @param {string} filePath */
 function loadEnvFile(filePath) {
   try {
     for (const line of fs.readFileSync(filePath, 'utf8').split('\n')) {
@@ -32,6 +33,7 @@ loadEnvFile(path.join(repoRoot, '.env'));
 const lensDevTarget = process.env.LENS_DEV_TARGET ?? 'http://127.0.0.1:3939';
 const posthogProxyPath = process.env.POSTHOG_PROXY_PATH || 'weef';
 
+/** @returns {import('vite').Plugin} */
 function runtimeConfigPlugin() {
   return {
     name: 'wee-forest-runtime-config',
@@ -47,7 +49,9 @@ function runtimeConfigPlugin() {
 
 export default defineConfig({
   site: 'https://weeforest.org',
-  trailingSlash: 'always',
+  // Prefer no trailing slash in links we emit, but do not 404 /lens/ in dev —
+  // Express redirects /lens/ → /lens after the Vite proxy forwards it.
+  trailingSlash: 'ignore',
   vite: {
     plugins: [tailwindcss(), runtimeConfigPlugin()],
     server: {
@@ -67,7 +71,7 @@ export default defineConfig({
   integrations: [
     sitemap({
       // Lens is served by Express, not Astro routes — include it explicitly.
-      customPages: ['https://weeforest.org/lens/'],
+      customPages: ['https://weeforest.org/lens'],
     }),
   ],
 });

@@ -156,6 +156,67 @@ a:hover, .nav-link:hover, .logo h1:hover {
     }
 }
 
+.map-compare-line {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    transform: translateX(-50%);
+    background-color: var(--dg-color-surface-primary);
+    box-shadow: var(--elevation-100);
+}
+
+.map-compare-slider {
+    appearance: none;
+    position: absolute;
+    z-index: 21;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+    background: transparent;
+
+    &::-webkit-slider-runnable-track {
+        height: 4px;
+        background: transparent;
+    }
+
+    &::-webkit-slider-thumb {
+        appearance: none;
+        width: 32px;
+        height: 48px;
+        margin-top: -22px;
+        border: 0;
+        border-radius: 4px;
+        background-color: var(--dg-color-surface-primary);
+        box-shadow: var(--elevation-100);
+    }
+
+    &::-moz-range-track {
+        height: 4px;
+        background: transparent;
+    }
+
+    &::-moz-range-thumb {
+        width: 32px;
+        height: 48px;
+        border: 0;
+        border-radius: 4px;
+        background-color: var(--dg-color-surface-primary);
+        box-shadow: var(--elevation-100);
+    }
+
+    &:focus-visible {
+        outline: none;
+    }
+}
+
 .mapboxgl-ctrl-bottom-left .mapboxgl-ctrl {
     margin: 0 0 8px 8px;
 }
@@ -204,6 +265,7 @@ mapboxgl-ctrl-bottom-right {
     .widget-toggle-container {
         position: absolute;
         padding: 6px;
+        border: 0;
 
         height: 80%;
         max-height: 48px;
@@ -369,8 +431,12 @@ mapboxgl-ctrl-bottom-right {
         cursor: pointer;
 
         padding: 8px;
+        border: 0;
         flex-grow: 1;
         text-align: center;
+        color: inherit;
+        background: transparent;
+        font: inherit;
 
         &.selected {
             background-color: var(--dg-color-surface-primary--selected);
@@ -431,6 +497,9 @@ mapboxgl-ctrl-bottom-right {
             cursor: pointer;
             width: 64px;
             height: 24px;
+            padding: 0;
+            border: 0;
+            background-color: transparent;
 
             background-image: url(../assets/icon/swap.svg);
         }
@@ -504,8 +573,14 @@ mapboxgl-ctrl-bottom-right {
 
         position: relative;
 
+        width: 100%;
         padding: 4px 8px;
+        border: 0;
         gap: 16px;
+        color: inherit;
+        background: transparent;
+        font: inherit;
+        text-align: inherit;
 
         &.feature-row {
             padding: 4px 8px;
@@ -606,9 +681,12 @@ mapboxgl-ctrl-bottom-right {
                 display: inline-block;
                 height: 16px;
                 width: 16px;
+                padding: 0;
+                border: 0;
 
                 cursor: pointer;
 
+                background-color: transparent;
                 background-image: url(../assets/icon/settings.svg);
             }
         }

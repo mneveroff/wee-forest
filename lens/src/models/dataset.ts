@@ -1,4 +1,4 @@
-import { MapModeTypes } from './../components/mode-selector';
+import { MapModeTypes } from '@/models/lens-config';
 
 export enum DatasetTypes {
     NFI_AWI_Overlay = 'nao',

@@ -6,10 +6,13 @@
   "type": "module",
   "scripts": {
     "start-tileserver": "tileserver-gl -c tileserver-config.json",
-    "watch-dev": "pnpm install && node build.dev.js",
+    "test:map-harness": "vitest run --config vitest.map-harness.config.ts",
+    "test:map-harness:headed": "VITEST_BROWSER_HEADED=1 vitest --config vitest.map-harness.config.ts",
+    "dev:map-harness": "vite --config vite.map-harness.config.ts",
+    "watch-dev": "node build.dev.js",
     "serve-dev": "nodemon src/server.mjs",
     "dev": "concurrently \"pnpm run watch-dev\" \"pnpm run serve-dev\"",
-    "build": "pnpm install && node build.js",
+    "build": "node build.js",
     "serve": "node src/server.mjs",
     "prod": "pnpm run build && pnpm run serve",
     "docker:build": "pnpm run build && docker build --build-arg GIT_HASH=$(git rev-parse --short HEAD) -t wee-forest-lens --no-cache ../",
@@ -32,24 +35,27 @@
     "@duckdb/node-api": "1.5.3-r.2",
     "dotenv": "^16.4.5",
     "esbuild": "^0.28.1",
-    "events": "^3.3.0",
     "express": "^4.22.0",
     "express-rate-limit": "^7.2.0",
     "http-proxy-middleware": "^2.0.9",
-    "lit": "^3.1.2",
-    "lit-html": "^3.1.2",
     "mapbox-gl": "^3.2.0",
-    "mapbox-gl-compare": "^0.4.1",
     "posthog-js": "^1.376.4",
     "posthog-node": "^5.35.6",
-    "tileserver-gl-light": "^5.6.0"
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-map-gl": "8.1.1",
+    "tileserver-gl-light": "^5.6.0",
+    "zustand": "5.0.14"
   },
-  "packageManager": "pnpm@11.5.2",
+  "packageManager": "pnpm@11.11.0",
   "engines": {
     "node": "24.x"
   },
   "devDependencies": {
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
     "concurrently": "^9.2.1",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "vite": "8.1.4"
   }
 }
